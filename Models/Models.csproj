@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Configurations>Debug;Release;Both sites</Configurations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Context\Application\**" />
+    <Compile Remove="ViewModels\Article\**" />
+    <EmbeddedResource Remove="Context\Application\**" />
+    <EmbeddedResource Remove="ViewModels\Article\**" />
+    <None Remove="Context\Application\**" />
+    <None Remove="ViewModels\Article\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Contracts\INomService.cs" />
+    <Compile Remove="Services\NomService.cs" />
+    <Compile Remove="Services\ReportService.cs" />
+    <Compile Remove="ViewModels\ReAddressVM.cs" />
+    <Compile Remove="ViewModels\RePersonVM.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EPPlus.Core" Version="1.5.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
+</Project>
