@@ -10,7 +10,7 @@ using Models.Context;
 namespace Models.Migrations
 {
     [DbContext(typeof(MainContext))]
-    [Migration("20211110104739_InitialSetup")]
+    [Migration("20211203130927_InitialSetup")]
     partial class InitialSetup
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
