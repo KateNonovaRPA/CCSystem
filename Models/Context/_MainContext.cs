@@ -1,20 +1,407 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Models.Entities;
+using System;
+using System.Linq;
 
 namespace Models.Context
 {
-	public class MainContext : DbContext
-	{
+    public class MainContext : DbContext
+    {
+        public MainContext(DbContextOptions<MainContext> options)
+                                        : base(options)
+        { }
 
-		public MainContext(DbContextOptions<MainContext> options)
-										: base(options)
-		{ }
+        public DbSet<City> Cities { get; set; }
+        public DbSet<Court> Courts { get; set; }
+        public DbSet<CourtAttribute> CourtAttributes { get; set; }
+        public DbSet<Lawsuit> Lawsuits { get; set; }
+        public DbSet<LawsuitData> LawsuitData { get; set; }
+        public DbSet<LawsuitType> LawsuitTypes { get; set; }
+        public DbSet<UserLawsuit> UserLawsuits { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Entities.Type> Types { get; set; }
+        public DbSet<CourtType> CourtTypes { get; set; }
+        public DbSet<LawsuitTypeDictionary> LawsuitTypeDictionary { get; set; }
 
-		public virtual DbSet<Users> Users { get; set; }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
+            {
+                relationship.DeleteBehavior = DeleteBehavior.Restrict;
+            }
+            //var cascadeFKs = modelBuilder.Model.GetEntityTypes()
+            //    .SelectMany(t => t.GetForeignKeys())
+            //    .Where(fk => !fk.IsOwnership && fk.DeleteBehavior == DeleteBehavior.Cascade);
+            //foreach (var fk in cascadeFKs)
+            //    fk.DeleteBehavior = DeleteBehavior.Restrict;
 
+            //modelBuilder.Entity<LawsuitData>().HasOne(x => x.Lawsuit).WithMany().HasForeignKey(x => x.lawsuitID).OnDelete(DeleteBehavior.NoAction);
 
-		protected override void OnModelCreating(ModelBuilder modelBuilder)
-		{
-			
-		}
-	}
+            //modelBuilder.Entity<Lawsuit>().HasMany(x => x.LawsuitData).WithOne().HasForeignKey(x => x.lawsuitID).OnDelete(DeleteBehavior.NoAction);
+
+            //modelBuilder.Entity<LawsuitData>().HasOne(x => x.CourtAttribute).WithMany().HasForeignKey(x => x.courtAttributeID).OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<CourtType>().HasKey(sc => new { sc.courtId, sc.typeID });
+
+            modelBuilder.Entity<CourtType>()
+                .HasOne(sc => sc.Type)
+                .WithMany(s => s.CourtTypes)
+                .HasForeignKey(sc => sc.typeID);
+
+            modelBuilder.Entity<CourtType>()
+                .HasOne(sc => sc.Court)
+                .WithMany(s => s.CourtTypes)
+                .HasForeignKey(sc => sc.courtId);
+
+            modelBuilder.Entity<User>()
+            .HasData(
+
+           //WARN: only for test
+           new User { UUID = new System.Guid("71967346-b744-469b-b8d7-159530990028"), identityID =  new System.Guid("71967346-b744-469b-b8d7-159530990028"), name="test" });
+
+            modelBuilder.Entity<LawsuitTypeDictionary>().HasData(
+                new LawsuitTypeDictionary { ID = 1, name = "Административно дело" },
+                new LawsuitTypeDictionary { ID = 2, name = "Брачно дело" },
+                new LawsuitTypeDictionary { ID = 3, name = "ВНАХД" },
+                new LawsuitTypeDictionary { ID = 4, name = "ВНОХД" },
+                new LawsuitTypeDictionary { ID = 5, name = "ВНЧХД" },
+                new LawsuitTypeDictionary { ID = 6, name = "ВЧНД" },
+                new LawsuitTypeDictionary { ID = 7, name = "Въззивно гражданско дело" },
+                new LawsuitTypeDictionary { ID = 8, name = "Въззивно търговско дело" },
+                new LawsuitTypeDictionary { ID = 9, name = "Въззивно частно гражданско дело" },
+                new LawsuitTypeDictionary { ID = 10, name = "Въззивно частно търговско дело" },
+                new LawsuitTypeDictionary { ID = 11, name = "Гражданско дело" },
+                new LawsuitTypeDictionary { ID = 12, name = "Гражданско дело по несъстоятелност" },
+                new LawsuitTypeDictionary { ID = 13, name = "Гражданско дело по несъстоятелност (В)" },
+                new LawsuitTypeDictionary { ID = 14, name = "Касационно административно дело" },
+                new LawsuitTypeDictionary { ID = 15, name = "Касационно гражданско дело" },
+                new LawsuitTypeDictionary { ID = 16, name = "Касационно наказателно дело" },
+                new LawsuitTypeDictionary { ID = 17, name = "Касационно търговско дело" },
+                new LawsuitTypeDictionary { ID = 18, name = "Касационно частно административно дело" },
+                new LawsuitTypeDictionary { ID = 19, name = "Касационно частно гражданско дело" },
+                new LawsuitTypeDictionary { ID = 20, name = "Касационно частно наказателно дело" },
+                new LawsuitTypeDictionary { ID = 21, name = "Касационно частно търговско дело" },
+                new LawsuitTypeDictionary { ID = 22, name = "КНАХД" },
+                new LawsuitTypeDictionary { ID = 23, name = "КЧАНД" },
+                new LawsuitTypeDictionary { ID = 24, name = "Наказателно дело за възобновяване" },
+                new LawsuitTypeDictionary { ID = 25, name = "НАХД" },
+                new LawsuitTypeDictionary { ID = 26, name = "НОХД" },
+                new LawsuitTypeDictionary { ID = 27, name = "НЧХД" },
+                new LawsuitTypeDictionary { ID = 28, name = "Търговско дело" },
+                new LawsuitTypeDictionary { ID = 29, name = "Търговско дело по несъстоятелност" },
+                new LawsuitTypeDictionary { ID = 30, name = "Търговско дело по несъстоятелност (В)" },
+                new LawsuitTypeDictionary { ID = 31, name = "Фирмено дело" },
+                new LawsuitTypeDictionary { ID = 32, name = "ЧАНД" },
+                new LawsuitTypeDictionary { ID = 33, name = "Частно административно дело" },
+                new LawsuitTypeDictionary { ID = 34, name = "Частно гражданско дело" },
+                new LawsuitTypeDictionary { ID = 35, name = "Частно търговско дело" },
+                new LawsuitTypeDictionary { ID = 36, name = "ЧНД" }
+            );
+            modelBuilder.Entity<City>().HasData(
+            new City { ID = 1, name = "Благоевград" },
+            new City { ID = 2, name = "Бургас" },
+            new City { ID = 3, name = "Варна" },
+            new City { ID = 4, name = "Велико Търново" },
+            new City { ID = 5, name = "Видин" },
+            new City { ID = 6, name = "Враца" },
+            new City { ID = 7, name = "Габрово" },
+            new City { ID = 8, name = "Добрич" },
+            new City { ID = 9, name = "Кърджали" },
+            new City { ID = 10, name = "Кюстендил" },
+            new City { ID = 11, name = "Ловеч" },
+            new City { ID = 12, name = "Монтана" },
+            new City { ID = 13, name = "Пазарджик" },
+            new City { ID = 14, name = "Перник" },
+            new City { ID = 15, name = "Плевен" },
+            new City { ID = 16, name = "Пловдив" },
+            new City { ID = 17, name = "Разград" },
+            new City { ID = 18, name = "Русе" },
+            new City { ID = 19, name = "Силистра" },
+            new City { ID = 20, name = "Сливен" },
+            new City { ID = 21, name = "Смолян" },
+            new City { ID = 22, name = "София" },
+            new City { ID = 23, name = "Стара Загора" },
+            new City { ID = 24, name = "Търговище" },
+            new City { ID = 25, name = "Хасково" },
+            new City { ID = 26, name = "Шумен" },
+            new City { ID = 27, name = "Ямбол" },
+            new City { ID = 28, name = "пелативен съд" },
+            new City { ID = 29, name = "Айтос" },
+            new City { ID = 30, name = "Ардино" },
+            new City { ID = 31, name = "Асеновград" },
+            new City { ID = 32, name = "Балчик" },
+            new City { ID = 33, name = "Белоградчик" },
+            new City { ID = 34, name = "Берковица" },
+            new City { ID = 35, name = "Ботевград" },
+            new City { ID = 36, name = "Брезник" },
+            new City { ID = 37, name = "Бяла" },
+            new City { ID = 38, name = "Бяла Слатина" },
+            new City { ID = 39, name = "Велики Преслав" },
+            new City { ID = 40, name = "Велинград" },
+            new City { ID = 41, name = "Ген. Тошево" },
+            new City { ID = 42, name = "Горна Оряховица" },
+            new City { ID = 43, name = "Гоце Делчев" },
+            new City { ID = 44, name = "Гълъбово" },
+            new City { ID = 45, name = "Девин" },
+            new City { ID = 46, name = "Девня" },
+            new City { ID = 47, name = "Димитровград" },
+            new City { ID = 48, name = "Дряново" },
+            new City { ID = 49, name = "Дулово" },
+            new City { ID = 50, name = "Дупница" },
+            new City { ID = 51, name = "Елена" },
+            new City { ID = 52, name = "Елин Пелин" },
+            new City { ID = 53, name = "Елхово" },
+            new City { ID = 54, name = "Етрополе" },
+            new City { ID = 55, name = "Златоград" },
+            new City { ID = 56, name = "Ивайловград" },
+            new City { ID = 57, name = "Исперих" },
+            new City { ID = 58, name = "Ихтиман" },
+            new City { ID = 59, name = "Каварна" },
+            new City { ID = 60, name = "Казанлък" },
+            new City { ID = 61, name = "Карлово" },
+            new City { ID = 62, name = "Карнобат" },
+            new City { ID = 63, name = "Кнежа" },
+            new City { ID = 64, name = "Козлодуй" },
+            new City { ID = 65, name = "Костинброд" },
+            new City { ID = 66, name = "Котел" },
+            new City { ID = 67, name = "Крумовград" },
+            new City { ID = 68, name = "Кубрат" },
+            new City { ID = 69, name = "Кула" },
+            new City { ID = 70, name = "Левски" },
+            new City { ID = 71, name = "Лом" },
+            new City { ID = 72, name = "Луковит" },
+            new City { ID = 73, name = "Мадан" },
+            new City { ID = 74, name = "Малко Търново" },
+            new City { ID = 75, name = "Мездра" },
+            new City { ID = 76, name = "Момчилград" },
+            new City { ID = 77, name = "Несебър" },
+            new City { ID = 78, name = "Никопол" },
+            new City { ID = 79, name = "Нова Загора" },
+            new City { ID = 80, name = "Нови пазар" },
+            new City { ID = 81, name = "Омуртаг" },
+            new City { ID = 82, name = "Оряхово" },
+            new City { ID = 83, name = "Павликени" },
+            new City { ID = 84, name = "Панагюрище" },
+            new City { ID = 85, name = "Петрич" },
+            new City { ID = 86, name = "Пещера" },
+            new City { ID = 87, name = "Пирдоп" },
+            new City { ID = 88, name = "Поморие" },
+            new City { ID = 89, name = "Попово" },
+            new City { ID = 90, name = "Провадия" },
+            new City { ID = 91, name = "Първомай" },
+            new City { ID = 92, name = "Раднево" },
+            new City { ID = 93, name = "Радомир" },
+            new City { ID = 94, name = "Разлог" },
+            new City { ID = 95, name = "Самоков" },
+            new City { ID = 96, name = "Сандански" },
+            new City { ID = 97, name = "Свиленград" },
+            new City { ID = 98, name = "Свищов" },
+            new City { ID = 99, name = "Своге" },
+            new City { ID = 100, name = "Севлиево" },
+            new City { ID = 101, name = "Сливница" },
+            new City { ID = 102, name = "Средец" },
+            new City { ID = 103, name = "Ст.Загора" },
+            new City { ID = 104, name = "Тервел" },
+            new City { ID = 105, name = "Тетевен" },
+            new City { ID = 106, name = "Тополовград" },
+            new City { ID = 107, name = "Троян" },
+            new City { ID = 108, name = "Трън" },
+            new City { ID = 109, name = "Трявна" },
+            new City { ID = 110, name = "Тутракан" },
+            new City { ID = 111, name = "Харманли" },
+            new City { ID = 112, name = "Царево" },
+            new City { ID = 113, name = "Чепеларе" },
+            new City { ID = 114, name = "Червен бряг" },
+            new City { ID = 115, name = "Чирпан" }
+            );
+
+            modelBuilder.Entity<Court>().HasData(
+            new Court { ID = 1, name = "Административен съд ", fullName="Административен съд - Благоевград", cityId = 1, createdAt = DateTime.Now },
+            new Court { ID = 2, name = "Административен съд ", fullName="Административен съд - Бургас", cityId = 2, createdAt = DateTime.Now },
+            new Court { ID = 3, name = "Административен съд ", fullName="Административен съд - Варна", cityId = 3, createdAt = DateTime.Now },
+            new Court { ID = 4, name = "Административен съд ", fullName="Административен съд - Велико Търново", cityId = 4, createdAt = DateTime.Now },
+            new Court { ID = 5, name = "Административен съд ", fullName="Административен съд - Видин", cityId = 5, createdAt = DateTime.Now },
+            new Court { ID = 6, name = "Административен съд ", fullName="Административен съд - Враца", cityId = 6, createdAt = DateTime.Now },
+            new Court { ID = 7, name = "Административен съд ", fullName="Административен съд - Габрово", cityId = 7, createdAt = DateTime.Now },
+            new Court { ID = 8, name = "Административен съд ", fullName="Административен съд - Добрич", cityId = 8, createdAt = DateTime.Now },
+            new Court { ID = 9, name = "Административен съд ", fullName="Административен съд - Кърджали", cityId = 9, createdAt = DateTime.Now },
+            new Court { ID = 10, name = "Административен съд ", fullName="Административен съд - Кюстендил", cityId = 10, createdAt = DateTime.Now },
+            new Court { ID = 11, name = "Административен съд ", fullName="Административен съд - Ловеч", cityId = 11, createdAt = DateTime.Now },
+            new Court { ID = 12, name = "Административен съд ", fullName="Административен съд - Монтана", cityId = 12, createdAt = DateTime.Now },
+            new Court { ID = 13, name = "Административен съд ", fullName="Административен съд - Пазарджик", cityId = 13, createdAt = DateTime.Now },
+            new Court { ID = 14, name = "Административен съд ", fullName="Административен съд - Перник", cityId = 14, createdAt = DateTime.Now },
+            new Court { ID = 15, name = "Административен съд ", fullName="Административен съд - Плевен", cityId = 15, createdAt = DateTime.Now },
+            new Court { ID = 16, name = "Административен съд ", fullName="Административен съд - Пловдив", cityId = 16, createdAt = DateTime.Now },
+            new Court { ID = 17, name = "Административен съд ", fullName="Административен съд - Разград", cityId = 17, createdAt = DateTime.Now },
+            new Court { ID = 18, name = "Административен съд ", fullName="Административен съд - Русе", cityId = 18, createdAt = DateTime.Now },
+            new Court { ID = 19, name = "Административен съд ", fullName="Административен съд - Силистра", cityId = 19, createdAt = DateTime.Now },
+            new Court { ID = 20, name = "Административен съд ", fullName="Административен съд - Сливен", cityId = 20, createdAt = DateTime.Now },
+            new Court { ID = 21, name = "Административен съд ", fullName="Административен съд - Смолян", cityId = 21, createdAt = DateTime.Now },
+            new Court { ID = 22, name = "Административен съд ", fullName="Административен съд - София-град", cityId = 22, createdAt = DateTime.Now },
+            new Court { ID = 23, name = "Административен съд ", fullName="Административен съд - София-област", cityId = 22, createdAt = DateTime.Now },
+            new Court { ID = 24, name = "Административен съд ", fullName="Административен съд - Стара Загора", cityId = 23, createdAt = DateTime.Now },
+            new Court { ID = 25, name = "Административен съд ", fullName="Административен съд - Търговище", cityId = 24, createdAt = DateTime.Now },
+            new Court { ID = 26, name = "Административен съд ", fullName="Административен съд - Хасково", cityId = 25, createdAt = DateTime.Now },
+            new Court { ID = 27, name = "Административен съд ", fullName="Административен съд - Шумен", cityId = 26, createdAt = DateTime.Now },
+            new Court { ID = 28, name = "Административен съд ", fullName="Административен съд - Ямбол", cityId = 27, createdAt = DateTime.Now },
+            new Court { ID = 29, name = "Апелативен специализиран наказателен съд", fullName="Апелативен специализиран наказателен съд", createdAt = DateTime.Now },
+            new Court { ID = 30, name = "Апелативен съд ", fullName="Апелативен съд - Бургас", cityId = 2, createdAt = DateTime.Now },
+            new Court { ID = 31, name = "Апелативен съд ", fullName="Апелативен съд - Варна", cityId = 3, createdAt = DateTime.Now },
+            new Court { ID = 32, name = "Апелативен съд ", fullName="Апелативен съд - Велико Търново", cityId = 4, createdAt = DateTime.Now },
+            new Court { ID = 33, name = "Апелативен съд ", fullName="Апелативен съд - Пловдив", cityId = 16, createdAt = DateTime.Now },
+            new Court { ID = 34, name = "Апелативен съд ", fullName="Апелативен съд - София", cityId = 22, createdAt = DateTime.Now },
+            new Court { ID = 35, name = "Военен съд ", fullName="Военен съд - Варна", cityId = 3, createdAt = DateTime.Now },
+            new Court { ID = 36, name = "Военен съд ", fullName="Военен съд - Плевен", cityId = 15, createdAt = DateTime.Now },
+            new Court { ID = 37, name = "Военен съд ", fullName="Военен съд - Пловдив", cityId = 16, createdAt = DateTime.Now },
+            new Court { ID = 38, name = "Военен съд ", fullName="Военен съд - Сливен", cityId = 20, createdAt = DateTime.Now },
+            new Court { ID = 39, name = "Военен съд ", fullName="Военен съд - София", cityId = 22, createdAt = DateTime.Now },
+            new Court { ID = 40, name = "Военно", fullName="Военно-апелативен съд", cityId = 28, createdAt = DateTime.Now },
+            new Court { ID = 41, name = "Върховен административен съд", fullName="Върховен административен съд", createdAt = DateTime.Now },
+            new Court { ID = 42, name = "Върховен касационен съд", fullName="Върховен касационен съд", createdAt = DateTime.Now },
+            new Court { ID = 43, name = "Окръжен съд ", fullName="Окръжен съд - Благоевград", cityId = 1, createdAt = DateTime.Now },
+            new Court { ID = 44, name = "Окръжен съд ", fullName="Окръжен съд - Бургас", cityId = 2, createdAt = DateTime.Now },
+            new Court { ID = 45, name = "Окръжен съд ", fullName="Окръжен съд - Варна", cityId = 3, createdAt = DateTime.Now },
+            new Court { ID = 46, name = "Окръжен съд ", fullName="Окръжен съд - Велико Търново", cityId = 4, createdAt = DateTime.Now },
+            new Court { ID = 47, name = "Окръжен съд ", fullName="Окръжен съд - Видин", cityId = 5, createdAt = DateTime.Now },
+            new Court { ID = 48, name = "Окръжен съд ", fullName="Окръжен съд - Враца", cityId = 6, createdAt = DateTime.Now },
+            new Court { ID = 49, name = "Окръжен съд ", fullName="Окръжен съд - Габрово", cityId = 7, createdAt = DateTime.Now },
+            new Court { ID = 50, name = "Окръжен съд ", fullName="Окръжен съд - Добрич", cityId = 8, createdAt = DateTime.Now },
+            new Court { ID = 51, name = "Окръжен съд ", fullName="Окръжен съд - Кърджали", cityId = 9, createdAt = DateTime.Now },
+            new Court { ID = 52, name = "Окръжен съд ", fullName="Окръжен съд - Кюстендил", cityId = 10, createdAt = DateTime.Now },
+            new Court { ID = 53, name = "Окръжен съд ", fullName="Окръжен съд - Ловеч", cityId = 11, createdAt = DateTime.Now },
+            new Court { ID = 54, name = "Окръжен съд ", fullName="Окръжен съд - Монтана", cityId = 12, createdAt = DateTime.Now },
+            new Court { ID = 55, name = "Окръжен съд ", fullName="Окръжен съд - Пазарджик", cityId = 13, createdAt = DateTime.Now },
+            new Court { ID = 56, name = "Окръжен съд ", fullName="Окръжен съд - Перник", cityId = 14, createdAt = DateTime.Now },
+            new Court { ID = 57, name = "Окръжен съд ", fullName="Окръжен съд - Плевен", cityId = 15, createdAt = DateTime.Now },
+            new Court { ID = 58, name = "Окръжен съд ", fullName="Окръжен съд - Пловдив", cityId = 16, createdAt = DateTime.Now },
+            new Court { ID = 59, name = "Окръжен съд ", fullName="Окръжен съд - Разград", cityId = 17, createdAt = DateTime.Now },
+            new Court { ID = 60, name = "Окръжен съд ", fullName="Окръжен съд - Русе", cityId = 18, createdAt = DateTime.Now },
+            new Court { ID = 61, name = "Окръжен съд ", fullName="Окръжен съд - Силистра", cityId = 19, createdAt = DateTime.Now },
+            new Court { ID = 62, name = "Окръжен съд ", fullName="Окръжен съд - Сливен", cityId = 20, createdAt = DateTime.Now },
+            new Court { ID = 63, name = "Окръжен съд ", fullName="Окръжен съд - Смолян", cityId = 21, createdAt = DateTime.Now },
+            new Court { ID = 64, name = "Окръжен съд ", fullName="Окръжен съд - Стара Загора", cityId = 23, createdAt = DateTime.Now },
+            new Court { ID = 65, name = "Окръжен съд ", fullName="Окръжен съд - Търговище", cityId = 24, createdAt = DateTime.Now },
+            new Court { ID = 66, name = "Окръжен съд ", fullName="Окръжен съд - Хасково", cityId = 25, createdAt = DateTime.Now },
+            new Court { ID = 67, name = "Окръжен съд ", fullName="Окръжен съд - Шумен", cityId = 26, createdAt = DateTime.Now },
+            new Court { ID = 68, name = "Окръжен съд ", fullName="Окръжен съд - Ямбол", cityId = 27, createdAt = DateTime.Now },
+            new Court { ID = 69, name = "Районен съд ", fullName="Районен съд - Айтос", cityId = 29, createdAt = DateTime.Now },
+            new Court { ID = 70, name = "Районен съд ", fullName="Районен съд - Ардино", cityId = 30, createdAt = DateTime.Now },
+            new Court { ID = 71, name = "Районен съд ", fullName="Районен съд - Асеновград", cityId = 31, createdAt = DateTime.Now },
+            new Court { ID = 72, name = "Районен съд ", fullName="Районен съд - Балчик", cityId = 32, createdAt = DateTime.Now },
+            new Court { ID = 73, name = "Районен съд ", fullName="Районен съд - Белоградчик", cityId = 33, createdAt = DateTime.Now },
+            new Court { ID = 74, name = "Районен съд ", fullName="Районен съд - Берковица", cityId = 34, createdAt = DateTime.Now },
+            new Court { ID = 75, name = "Районен съд ", fullName="Районен съд - Благоевград", cityId = 1, createdAt = DateTime.Now },
+            new Court { ID = 76, name = "Районен съд ", fullName="Районен съд - Ботевград", cityId = 35, createdAt = DateTime.Now },
+            new Court { ID = 77, name = "Районен съд ", fullName="Районен съд - Брезник", cityId = 36, createdAt = DateTime.Now },
+            new Court { ID = 78, name = "Районен съд ", fullName="Районен съд - Бургас", cityId = 2, createdAt = DateTime.Now },
+            new Court { ID = 79, name = "Районен съд ", fullName="Районен съд - Бяла", cityId = 37, createdAt = DateTime.Now },
+            new Court { ID = 80, name = "Районен съд ", fullName="Районен съд - Бяла Слатина", cityId = 38, createdAt = DateTime.Now },
+            new Court { ID = 81, name = "Районен съд ", fullName="Районен съд - Варна", cityId = 3, createdAt = DateTime.Now },
+            new Court { ID = 82, name = "Районен съд ", fullName="Районен съд - Велики Преслав", cityId = 39, createdAt = DateTime.Now },
+            new Court { ID = 83, name = "Районен съд ", fullName="Районен съд - Велико Търново", cityId = 4, createdAt = DateTime.Now },
+            new Court { ID = 84, name = "Районен съд ", fullName="Районен съд - Велинград", cityId = 40, createdAt = DateTime.Now },
+            new Court { ID = 85, name = "Районен съд ", fullName="Районен съд - Видин", cityId = 5, createdAt = DateTime.Now },
+            new Court { ID = 86, name = "Районен съд ", fullName="Районен съд - Враца", cityId = 6, createdAt = DateTime.Now },
+            new Court { ID = 87, name = "Районен съд ", fullName="Районен съд - Габрово", cityId = 7, createdAt = DateTime.Now },
+            new Court { ID = 88, name = "Районен съд ", fullName="Районен съд - Ген. Тошево", cityId = 41, createdAt = DateTime.Now },
+            new Court { ID = 89, name = "Районен съд ", fullName="Районен съд - Горна Оряховица", cityId = 42, createdAt = DateTime.Now },
+            new Court { ID = 90, name = "Районен съд ", fullName="Районен съд - Гоце Делчев", cityId = 43, createdAt = DateTime.Now },
+            new Court { ID = 91, name = "Районен съд ", fullName="Районен съд - Гълъбово", cityId = 44, createdAt = DateTime.Now },
+            new Court { ID = 92, name = "Районен съд ", fullName="Районен съд - Девин", cityId = 45, createdAt = DateTime.Now },
+            new Court { ID = 93, name = "Районен съд ", fullName="Районен съд - Девня", cityId = 46, createdAt = DateTime.Now },
+            new Court { ID = 94, name = "Районен съд ", fullName="Районен съд - Димитровград", cityId = 47, createdAt = DateTime.Now },
+            new Court { ID = 95, name = "Районен съд ", fullName="Районен съд - Добрич", cityId = 8, createdAt = DateTime.Now },
+            new Court { ID = 96, name = "Районен съд ", fullName="Районен съд - Дряново", cityId = 48, createdAt = DateTime.Now },
+            new Court { ID = 97, name = "Районен съд ", fullName="Районен съд - Дулово", cityId = 49, createdAt = DateTime.Now },
+            new Court { ID = 98, name = "Районен съд ", fullName="Районен съд - Дупница", cityId = 50, createdAt = DateTime.Now },
+            new Court { ID = 99, name = "Районен съд ", fullName="Районен съд - Елена", cityId = 51, createdAt = DateTime.Now },
+            new Court { ID = 100, name = "Районен съд ", fullName="Районен съд - Елин Пелин", cityId = 52, createdAt = DateTime.Now },
+            new Court { ID = 101, name = "Районен съд ", fullName="Районен съд - Елхово", cityId = 53, createdAt = DateTime.Now },
+            new Court { ID = 102, name = "Районен съд ", fullName="Районен съд - Етрополе", cityId = 54, createdAt = DateTime.Now },
+            new Court { ID = 103, name = "Районен съд ", fullName="Районен съд - Златоград", cityId = 55, createdAt = DateTime.Now },
+            new Court { ID = 104, name = "Районен съд ", fullName="Районен съд - Ивайловград", cityId = 56, createdAt = DateTime.Now },
+            new Court { ID = 105, name = "Районен съд ", fullName="Районен съд - Исперих", cityId = 57, createdAt = DateTime.Now },
+            new Court { ID = 106, name = "Районен съд ", fullName="Районен съд - Ихтиман", cityId = 58, createdAt = DateTime.Now },
+            new Court { ID = 107, name = "Районен съд ", fullName="Районен съд - Каварна", cityId = 59, createdAt = DateTime.Now },
+            new Court { ID = 108, name = "Районен съд ", fullName="Районен съд - Казанлък", cityId = 60, createdAt = DateTime.Now },
+            new Court { ID = 109, name = "Районен съд ", fullName="Районен съд - Карлово", cityId = 61, createdAt = DateTime.Now },
+            new Court { ID = 110, name = "Районен съд ", fullName="Районен съд - Карнобат", cityId = 62, createdAt = DateTime.Now },
+            new Court { ID = 111, name = "Районен съд ", fullName="Районен съд - Кнежа", cityId = 63, createdAt = DateTime.Now },
+            new Court { ID = 112, name = "Районен съд ", fullName="Районен съд - Козлодуй", cityId = 64, createdAt = DateTime.Now },
+            new Court { ID = 113, name = "Районен съд ", fullName="Районен съд - Костинброд", cityId = 65, createdAt = DateTime.Now },
+            new Court { ID = 114, name = "Районен съд ", fullName="Районен съд - Котел", cityId = 66, createdAt = DateTime.Now },
+            new Court { ID = 115, name = "Районен съд ", fullName="Районен съд - Крумовград", cityId = 67, createdAt = DateTime.Now },
+            new Court { ID = 116, name = "Районен съд ", fullName="Районен съд - Кубрат", cityId = 68, createdAt = DateTime.Now },
+            new Court { ID = 117, name = "Районен съд ", fullName="Районен съд - Кула", cityId = 69, createdAt = DateTime.Now },
+            new Court { ID = 118, name = "Районен съд ", fullName="Районен съд - Кърджали", cityId = 9, createdAt = DateTime.Now },
+            new Court { ID = 119, name = "Районен съд ", fullName="Районен съд - Кюстендил", cityId = 10, createdAt = DateTime.Now },
+            new Court { ID = 120, name = "Районен съд ", fullName="Районен съд - Левски", cityId = 70, createdAt = DateTime.Now },
+            new Court { ID = 121, name = "Районен съд ", fullName="Районен съд - Ловеч", cityId = 11, createdAt = DateTime.Now },
+            new Court { ID = 122, name = "Районен съд ", fullName="Районен съд - Лом", cityId = 71, createdAt = DateTime.Now },
+            new Court { ID = 123, name = "Районен съд ", fullName="Районен съд - Луковит", cityId = 72, createdAt = DateTime.Now },
+            new Court { ID = 124, name = "Районен съд ", fullName="Районен съд - Мадан", cityId = 73, createdAt = DateTime.Now },
+            new Court { ID = 125, name = "Районен съд ", fullName="Районен съд - Малко Търново", cityId = 74, createdAt = DateTime.Now },
+            new Court { ID = 126, name = "Районен съд ", fullName="Районен съд - Мездра", cityId = 75, createdAt = DateTime.Now },
+            new Court { ID = 127, name = "Районен съд ", fullName="Районен съд - Момчилград", cityId = 76, createdAt = DateTime.Now },
+            new Court { ID = 128, name = "Районен съд ", fullName="Районен съд - Монтана", cityId = 12, createdAt = DateTime.Now },
+            new Court { ID = 129, name = "Районен съд ", fullName="Районен съд - Несебър", cityId = 77, createdAt = DateTime.Now },
+            new Court { ID = 130, name = "Районен съд ", fullName="Районен съд - Никопол", cityId = 78, createdAt = DateTime.Now },
+            new Court { ID = 131, name = "Районен съд ", fullName="Районен съд - Нова Загора", cityId = 79, createdAt = DateTime.Now },
+            new Court { ID = 132, name = "Районен съд ", fullName="Районен съд - Нови пазар", cityId = 80, createdAt = DateTime.Now },
+            new Court { ID = 133, name = "Районен съд ", fullName="Районен съд - Омуртаг", cityId = 81, createdAt = DateTime.Now },
+            new Court { ID = 134, name = "Районен съд ", fullName="Районен съд - Оряхово", cityId = 82, createdAt = DateTime.Now },
+            new Court { ID = 135, name = "Районен съд ", fullName="Районен съд - Павликени", cityId = 83, createdAt = DateTime.Now },
+            new Court { ID = 136, name = "Районен съд ", fullName="Районен съд - Пазарджик", cityId = 13, createdAt = DateTime.Now },
+            new Court { ID = 137, name = "Районен съд ", fullName="Районен съд - Панагюрище", cityId = 84, createdAt = DateTime.Now },
+            new Court { ID = 138, name = "Районен съд ", fullName="Районен съд - Перник", cityId = 14, createdAt = DateTime.Now },
+            new Court { ID = 139, name = "Районен съд ", fullName="Районен съд - Петрич", cityId = 85, createdAt = DateTime.Now },
+            new Court { ID = 140, name = "Районен съд ", fullName="Районен съд - Пещера", cityId = 86, createdAt = DateTime.Now },
+            new Court { ID = 141, name = "Районен съд ", fullName="Районен съд - Пирдоп", cityId = 87, createdAt = DateTime.Now },
+            new Court { ID = 142, name = "Районен съд ", fullName="Районен съд - Плевен", cityId = 15, createdAt = DateTime.Now },
+            new Court { ID = 143, name = "Районен съд ", fullName="Районен съд - Пловдив", cityId = 16, createdAt = DateTime.Now },
+            new Court { ID = 144, name = "Районен съд ", fullName="Районен съд - Поморие", cityId = 88, createdAt = DateTime.Now },
+            new Court { ID = 145, name = "Районен съд ", fullName="Районен съд - Попово", cityId = 89, createdAt = DateTime.Now },
+            new Court { ID = 146, name = "Районен съд ", fullName="Районен съд - Провадия", cityId = 90, createdAt = DateTime.Now },
+            new Court { ID = 147, name = "Районен съд ", fullName="Районен съд - Първомай", cityId = 91, createdAt = DateTime.Now },
+            new Court { ID = 148, name = "Районен съд ", fullName="Районен съд - Раднево", cityId = 92, createdAt = DateTime.Now },
+            new Court { ID = 149, name = "Районен съд ", fullName="Районен съд - Радомир", cityId = 93, createdAt = DateTime.Now },
+            new Court { ID = 150, name = "Районен съд ", fullName="Районен съд - Разград", cityId = 17, createdAt = DateTime.Now },
+            new Court { ID = 151, name = "Районен съд ", fullName="Районен съд - Разлог", cityId = 94, createdAt = DateTime.Now },
+            new Court { ID = 152, name = "Районен съд ", fullName="Районен съд - Русе", cityId = 18, createdAt = DateTime.Now },
+            new Court { ID = 153, name = "Районен съд ", fullName="Районен съд - Самоков", cityId = 95, createdAt = DateTime.Now },
+            new Court { ID = 154, name = "Районен съд ", fullName="Районен съд - Сандански", cityId = 96, createdAt = DateTime.Now },
+            new Court { ID = 155, name = "Районен съд ", fullName="Районен съд - Свиленград", cityId = 97, createdAt = DateTime.Now },
+            new Court { ID = 156, name = "Районен съд ", fullName="Районен съд - Свищов", cityId = 98, createdAt = DateTime.Now },
+            new Court { ID = 157, name = "Районен съд ", fullName="Районен съд - Своге", cityId = 99, createdAt = DateTime.Now },
+            new Court { ID = 158, name = "Районен съд ", fullName="Районен съд - Севлиево", cityId = 100, createdAt = DateTime.Now },
+            new Court { ID = 159, name = "Районен съд ", fullName="Районен съд - Силистра", cityId = 19, createdAt = DateTime.Now },
+            new Court { ID = 160, name = "Районен съд ", fullName="Районен съд - Сливен", cityId = 20, createdAt = DateTime.Now },
+            new Court { ID = 161, name = "Районен съд ", fullName="Районен съд - Сливница", cityId = 101, createdAt = DateTime.Now },
+            new Court { ID = 162, name = "Районен съд ", fullName="Районен съд - Смолян", cityId = 21, createdAt = DateTime.Now },
+            new Court { ID = 163, name = "Районен съд ", fullName="Районен съд - Средец", cityId = 102, createdAt = DateTime.Now },
+            new Court { ID = 164, name = "Районен съд ", fullName="Районен съд - Ст.Загора", cityId = 103, createdAt = DateTime.Now },
+            new Court { ID = 165, name = "Районен съд ", fullName="Районен съд - Тервел", cityId = 104, createdAt = DateTime.Now },
+            new Court { ID = 166, name = "Районен съд ", fullName="Районен съд - Тетевен", cityId = 105, createdAt = DateTime.Now },
+            new Court { ID = 167, name = "Районен съд ", fullName="Районен съд - Тополовград", cityId = 106, createdAt = DateTime.Now },
+            new Court { ID = 168, name = "Районен съд ", fullName="Районен съд - Троян", cityId = 107, createdAt = DateTime.Now },
+            new Court { ID = 169, name = "Районен съд ", fullName="Районен съд - Трън", cityId = 108, createdAt = DateTime.Now },
+            new Court { ID = 170, name = "Районен съд ", fullName="Районен съд - Трявна", cityId = 109, createdAt = DateTime.Now },
+            new Court { ID = 171, name = "Районен съд ", fullName="Районен съд - Тутракан", cityId = 110, createdAt = DateTime.Now },
+            new Court { ID = 172, name = "Районен съд ", fullName="Районен съд - Търговище", cityId = 24, createdAt = DateTime.Now },
+            new Court { ID = 173, name = "Районен съд ", fullName="Районен съд - Харманли", cityId = 111, createdAt = DateTime.Now },
+            new Court { ID = 174, name = "Районен съд ", fullName="Районен съд - Хасково", cityId = 25, createdAt = DateTime.Now },
+            new Court { ID = 175, name = "Районен съд ", fullName="Районен съд - Царево", cityId = 112, createdAt = DateTime.Now },
+            new Court { ID = 176, name = "Районен съд ", fullName="Районен съд - Чепеларе", cityId = 113, createdAt = DateTime.Now },
+            new Court { ID = 177, name = "Районен съд ", fullName="Районен съд - Червен бряг", cityId = 114, createdAt = DateTime.Now },
+            new Court { ID = 178, name = "Районен съд ", fullName="Районен съд - Чирпан", cityId = 115, createdAt = DateTime.Now },
+            new Court { ID = 179, name = "Районен съд ", fullName="Районен съд - Шумен", cityId = 26, createdAt = DateTime.Now },
+            new Court { ID = 180, name = "Районен съд ", fullName="Районен съд - Ямбол", cityId = 27, createdAt = DateTime.Now },
+            new Court { ID = 181, name = "Софийски градски съд", fullName="Софийски градски съд", createdAt = DateTime.Now },
+            new Court { ID = 182, name = "Софийски окръжен съд", fullName="Софийски окръжен съд", createdAt = DateTime.Now },
+            new Court { ID = 183, name = "Софийски районен съд", fullName="Софийски районен съд", createdAt = DateTime.Now },
+            new Court { ID = 184, name = "Специализиран наказателен съд", fullName="Специализиран наказателен съд", createdAt = DateTime.Now }
+            );
+            base.OnModelCreating(modelBuilder);
+        }
+    }
 }

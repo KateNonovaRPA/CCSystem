@@ -1,17 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Models.Context;
-using static Models.GlobalConstants;
+using Models.Entities;
 using Models.Contracts;
-using Models.ViewModels;
+using System;
+using System.Linq;
 
 namespace Models.Services
 {
     public class AuthService : BaseService, IAuthService
     {
-
         public AuthService(MainContext context)
         {
             this.db = context;
@@ -20,7 +17,7 @@ namespace Models.Services
         public bool CheckAuthorization(String _identityID)
         {
             if (string.IsNullOrEmpty(_identityID)) { return false; }
-            Users q1 = db.Users.Where(x => x.identityID == Guid.Parse(_identityID)).FirstOrDefault();
+            User q1 = db.Users.Where(x => x.identityID == Guid.Parse(_identityID)).FirstOrDefault();
             if (q1 != null)
             {
                 if (q1.identityID != null)
@@ -31,35 +28,26 @@ namespace Models.Services
             return false;
         }
 
-       
         public bool AuthorizeUser(Guid _UUID)
         {
-            if (_UUID!= Guid.Empty)
-            {          
-                Users _user = new Users();
+            if (_UUID != Guid.Empty)
+            {
+                User _user = new User();
                 try
                 {
                     var saved = db.Users.AsNoTracking().FirstOrDefault(x => x.UUID == _UUID);
 
-                    if (saved.identityID != Guid.Empty) { 
-                        return false; 
+                    if (saved.identityID != Guid.Empty)
+                    {
+                        return false;
                     };
-
                     _user.administrationName = saved.administrationName;
-                    _user.administrationOId = saved.administrationOId;
-                    _user.employeeIdentifier = saved.employeeIdentifier;
-                    _user.employeeNames = saved.employeeNames;
-                    _user.employeePosition = saved.employeePosition;
-                    _user.lawReason = saved.lawReason;
-                    _user.processorID = saved.processorID;
-                    _user.remark = saved.remark;
-                    _user.serviceType = saved.serviceType;
-                    _user.serviceURI = saved.serviceURI;
-                    _user.dateCreated = saved.dateCreated;
-                    _user.dateUpdated = DateTime.Now;
-
+                    _user.email = saved.email;
+                    _user.name = saved.name;
+                    _user.createdAt = saved.createdAt;
+                    _user.updatedAt = DateTime.Now;
+                    _user.deletedAt = saved.deletedAt;
                     _user.identityID = Guid.NewGuid();
-
                     db.Users.Update(_user);
                     db.SaveChanges();
 
@@ -77,7 +65,7 @@ namespace Models.Services
         {
             if (_UUID != Guid.Empty)
             {
-                Users _user = new Users();
+                User _user = new User();
                 try
                 {
                     var saved = db.Users.AsNoTracking().FirstOrDefault(x => x.UUID == _UUID);
@@ -88,18 +76,11 @@ namespace Models.Services
                     };
 
                     _user.administrationName = saved.administrationName;
-                    _user.administrationOId = saved.administrationOId;
-                    _user.employeeIdentifier = saved.employeeIdentifier;
-                    _user.employeeNames = saved.employeeNames;
-                    _user.employeePosition = saved.employeePosition;
-                    _user.lawReason = saved.lawReason;
-                    _user.processorID = saved.processorID;
-                    _user.remark = saved.remark;
-                    _user.serviceType = saved.serviceType;
-                    _user.serviceURI = saved.serviceURI;
-                    _user.dateCreated = saved.dateCreated;
-                    _user.dateUpdated = DateTime.Now;
-
+                    _user.email = saved.email;
+                    _user.name = saved.name;
+                    _user.createdAt = saved.createdAt;
+                    _user.updatedAt = DateTime.Now;
+                    _user.deletedAt = saved.deletedAt;
                     _user.identityID = Guid.Empty;
 
                     db.Users.Update(_user);
@@ -114,10 +95,5 @@ namespace Models.Services
             }
             return false;
         }
-
-
-
-
-      
     }
 }

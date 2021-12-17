@@ -1,68 +1,50 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Models.Context;
-using static Models.GlobalConstants;
+using Models.Entities;
 using Models.Contracts;
 using Models.ViewModels;
+using System;
+using System.Linq;
 
 namespace Models.Services
 {
     public class UserService : BaseService, IUserService
     {
-
         public UserService(MainContext context)
         {
             this.db = context;
         }
 
-
         public IQueryable<UserVM> GetUsersList()
         {
-            IQueryable<UserVM> q1 = db.Users.Where(x => x.isDeleted != true).Select
+            IQueryable<UserVM> q1 = db.Users.Where(x => x.deletedAt != null).Select
                           (
                               user => new UserVM()
-                                  {
-                                      UUID = user.UUID.ToString(),
-                                      identityID = user.identityID.ToString(),
-                                      administrationName = user.administrationName,
-                                      administrationOId = user.administrationOId,
-                                      employeeIdentifier = user.employeeIdentifier,
-                                      employeeNames = user.employeeNames,
-                                      employeePosition = user.employeePosition,
-                                      lawReason = user.lawReason,
-                                      processorID = user.processorID,
-                                      remark = user.remark,
-                                      serviceType = user.serviceType,
-                                      serviceURI = user.serviceURI
+                              {
+                                  UUID = user.UUID.ToString(),
+                                  identityID = user.identityID.ToString(),
+                                  administrationName = user.administrationName.ToString(),
+                                  name = user.name.ToString(),
+                                  email = user.email.ToString(),
+                                  createdAt = user.createdAt,
+                                  updatedAt = user.updatedAt,
+                                  deletedAt = (user.deletedAt !=null) ? user.deletedAt : null,
                               }
-                          );
+                          ); ;
             return q1;
-
         }
-
 
         public bool AddUser(UserVM _model)
         {
-            Users _user = new Users();
+            User _user = new User();
             try
             {
                 _user.UUID = new Guid();
                 _user.identityID = Guid.Empty;
                 _user.administrationName = _model.administrationName;
-                _user.administrationOId = _model.administrationOId;
-                _user.employeeIdentifier = _model.employeeIdentifier;
-                _user.employeeNames = _model.employeeNames;
-                _user.employeePosition = _model.employeePosition;
-                _user.lawReason = _model.lawReason;
-                _user.processorID = _model.processorID;
-                _user.remark = _model.remark;
-                _user.serviceType = _model.serviceType;
-                _user.serviceURI = _model.serviceURI;
-                _user.dateCreated = DateTime.Now;
-                _user.dateUpdated = DateTime.Now;
-                _user.isDeleted = false;
+                _user.name = _model.name;
+                _user.email = _model.email;
+                _user.createdAt = _model.createdAt;
 
                 db.Users.Add(_user);
                 db.SaveChanges();
@@ -73,32 +55,25 @@ namespace Models.Services
                 return false;
             }
         }
+
         public bool UpdateUser(UserVM _model)
         {
             if (_model.UUID != "")
             {
-             
-                Users _user = new Users();
-       
-                _user.administrationName = _model.administrationName;
-                _user.administrationOId = _model.administrationOId;
-                _user.employeeIdentifier = _model.employeeIdentifier;
-                _user.employeeNames = _model.employeeNames;
-                _user.employeePosition = _model.employeePosition;
-                _user.lawReason = _model.lawReason;
-                _user.processorID = _model.processorID;
-                _user.remark = _model.remark;
-                _user.serviceType = _model.serviceType;
-                _user.identityID = Guid.Parse(_model.identityID);
-                _user.serviceURI = _model.serviceURI;
+                User _user = new User();
 
+                _user.administrationName = _model.administrationName;
+                _user.name = _model.name;
+                _user.email = _model.email;
+                _user.administrationName = _model.administrationName;
+                _user.identityID = Guid.Parse(_model.identityID);
 
                 try
                 {
                     var saved = db.Users.AsNoTracking().FirstOrDefault(x => x.UUID == Guid.Parse(_model.UUID));
 
-                    _user.dateCreated = saved.dateCreated;
-                    _user.dateUpdated = DateTime.Now;
+                    _user.createdAt = saved.createdAt;
+                    _user.updatedAt = DateTime.Now;
 
                     db.Users.Update(_user);
                     db.SaveChanges();
@@ -111,54 +86,43 @@ namespace Models.Services
                 }
             }
             return false;
-
         }
-
 
         public UserVM GetUserByUUID(Guid _UUID)
         {
             UserVM _user = new UserVM();
-            Users q1 = db.Users.Where(x => x.UUID == _UUID).FirstOrDefault();
-            if (q1 != null) {
-                _user.UUID = q1.UUID.ToString();
-                _user.identityID = q1.identityID.ToString();
-                _user.administrationName = q1.administrationName;
-                _user.administrationOId = q1.administrationOId;
-                _user.employeeIdentifier = q1.employeeIdentifier;
-                _user.employeeNames = q1.employeeNames;
-                _user.employeePosition = q1.employeePosition;
-                _user.lawReason = q1.lawReason;
-                _user.processorID = q1.processorID;
-                _user.remark = q1.remark;
-                _user.serviceType = q1.serviceType;
-                _user.serviceURI = q1.serviceURI;
-                _user.dateCreated = q1.dateCreated;
-                _user.dateUpdated = q1.dateUpdated;
+            User user = db.Users.Where(x => x.UUID == _UUID).FirstOrDefault();
+            if (user != null)
+            {
+                _user.UUID = user.UUID.ToString();
+                _user.identityID = user.identityID.ToString();
+                _user.administrationName = user.administrationName;
+                _user.administrationName = user.administrationName;
+                _user.name = user.name;
+                _user.email = user.email;
+                _user.createdAt = user.createdAt;
+                _user.updatedAt = user.updatedAt;
+                _user.deletedAt = user.deletedAt;
             };
 
-         return _user;
+            return _user;
         }
 
         public UserVM GetUserByIdentityID(Guid _identityID)
         {
             UserVM _user = new UserVM();
-            Users q1 = db.Users.Where(x => x.identityID == _identityID).FirstOrDefault();
-            if (q1 != null)
+            User user = db.Users.Where(x => x.identityID == _identityID).FirstOrDefault();
+            if (user != null)
             {
-                _user.UUID = q1.UUID.ToString();
-                _user.identityID = q1.identityID.ToString();
-                _user.administrationName = q1.administrationName;
-                _user.administrationOId = q1.administrationOId;
-                _user.employeeIdentifier = q1.employeeIdentifier;
-                _user.employeeNames = q1.employeeNames;
-                _user.employeePosition = q1.employeePosition;
-                _user.lawReason = q1.lawReason;
-                _user.processorID = q1.processorID;
-                _user.remark = q1.remark;
-                _user.serviceType = q1.serviceType;
-                _user.serviceURI = q1.serviceURI;
-                _user.dateCreated = q1.dateCreated;
-                _user.dateUpdated = q1.dateUpdated;
+                _user.UUID = user.UUID.ToString();
+                _user.identityID = user.identityID.ToString();
+                _user.administrationName = user.administrationName;
+                _user.administrationName = user.administrationName;
+                _user.name = user.name;
+                _user.email = user.email;
+                _user.createdAt = user.createdAt;
+                _user.updatedAt = user.updatedAt;
+                _user.deletedAt = user.deletedAt;
             };
 
             return _user;
@@ -168,9 +132,8 @@ namespace Models.Services
         {
             try
             {
-                Users user = db.Users.Where(x => x.UUID == _UUID).FirstOrDefault();
-                user.isDeleted = true;
-                user.dateDeleted = DateTime.Now;
+                User user = db.Users.Where(x => x.UUID == _UUID).FirstOrDefault();
+                user.deletedAt = DateTime.Now;
                 db.Users.Update(user);
                 db.SaveChanges();
                 return true;
@@ -185,7 +148,7 @@ namespace Models.Services
         {
             try
             {
-                Users user = db.Users.Where(x => x.UUID == _UUID).FirstOrDefault();
+                User user = db.Users.Where(x => x.UUID == _UUID).FirstOrDefault();
                 db.Users.Remove(user);
                 db.SaveChanges();
                 return true;
@@ -196,6 +159,6 @@ namespace Models.Services
             }
         }
 
-      
+
     }
 }

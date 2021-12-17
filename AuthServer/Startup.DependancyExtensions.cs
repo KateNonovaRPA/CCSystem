@@ -12,6 +12,8 @@ namespace AuthServer
 			// Add application services.
 
 			services.AddTransient<IAuthService, AuthService>();
+			services.AddTransient<ILawsuitService, LawsuitService>();
+			services.AddTransient<ICourtService, CourtService>();
 			services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
 
 			return services;

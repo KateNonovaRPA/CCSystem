@@ -47,12 +47,6 @@ namespace AuthServer
             });
 
 
-            //services.AddDbContext<MainContext>(options =>
-            //options.UseSqlServer(Configuration.GetConnectionString("MainDB")));
-
-            //services.AddDbContext<MainContext>(options =>
-            //options.UseSqlite("Data Source=localdatabase.db"));
-
             string tmp = Configuration.GetConnectionString("MainDB");
 
             // Url Helper configured for injection 
@@ -160,6 +154,11 @@ namespace AuthServer
                 routes.MapRoute(
                                     name: "default",
                                     template: "{controller=Home}/{action=Index}/{id?}");
+
+                routes.MapRoute(
+                                    name: "lawsuits data",
+                                    template: "{controller=Lawsuits}/{action=LawsuitsData}");
+
             });
 
             logger.AddLog4Net();

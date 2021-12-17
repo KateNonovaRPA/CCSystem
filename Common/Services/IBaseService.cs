@@ -13,5 +13,6 @@ namespace Common.Services
         DbSet<T> All<T>() where T : class;
         IQueryable<T> All<T>(Expression<Func<T, bool>> search) where T : class;
         bool DeleteRange<T>(Expression<Func<T, bool>> whatToDelete) where T : class;
+        void UploadData();
     }
 }

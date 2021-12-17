@@ -2,15 +2,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Management;
-using Models.ViewModels;
 using Models.Contracts;
+using Models.ViewModels;
+using System;
+using System.Diagnostics;
+using System.Text.Json;
 
 namespace AuthServer.Controllers
 {
@@ -34,16 +30,12 @@ namespace AuthServer.Controllers
         [Route("api/Authorize/GetAuthorization")]
         public ActionResult<string> GetAuthorization([FromBody] encAuthRequestVM _encRequest)
         {
-
             string decryptedRequest = EncriptionHelper.Decrypt(_encRequest.Request, _encRequest.ReqID.ToString());
             string decodedRequest = Base64UrlEncoder.Encoder.Decode(decryptedRequest);
-            
+
             AuthRequestVM authRequest = JsonSerializer.Deserialize<AuthRequestVM>(decodedRequest);
 
-
             //TODO: Use service that authorize the request!
-
-
 
             AuthResponseVM myRespose = new AuthResponseVM();
             myRespose.GUIDCode = authRequest.GUIDCode;
@@ -56,8 +48,6 @@ namespace AuthServer.Controllers
 
             return CreatedAtAction("GetAuthorization", new { Timestamp = DateTime.UtcNow.ToString() }, encryptedResponse);
         }
-
-
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

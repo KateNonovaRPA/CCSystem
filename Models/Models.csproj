@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Contracts\INomService.cs" />
+    <Compile Remove="Repositories\INomService.cs" />
     <Compile Remove="Services\NomService.cs" />
     <Compile Remove="Services\ReportService.cs" />
     <Compile Remove="ViewModels\ReAddressVM.cs" />
@@ -35,10 +35,15 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="System.Data.OleDb" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

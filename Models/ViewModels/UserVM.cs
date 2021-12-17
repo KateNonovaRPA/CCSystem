@@ -11,15 +11,10 @@ namespace Models.ViewModels
         public string identityID { get; set; }
         public string processorID { get; set; }
         public string administrationName { get; set; }
-        public string administrationOId { get; set; }
-        public string employeeNames { get; set; }
-        public string employeePosition { get; set; }
-        public string employeeIdentifier { get; set; }
-        public string lawReason { get; set; }
-        public string remark { get; set; }
-        public string serviceType { get; set; }
-        public string serviceURI { get; set; }
-        public DateTime dateCreated { get; set; }
-        public DateTime dateUpdated { get; set; }
+        public string name { get; set; }
+        public string email { get; set; }
+        public DateTime createdAt { get; set; }
+        public DateTime updatedAt { get; set; }
+        public DateTime? deletedAt { get; set; }
     }
 }
