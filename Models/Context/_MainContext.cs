@@ -10,7 +10,6 @@ namespace Models.Context
         public MainContext(DbContextOptions<MainContext> options)
                                         : base(options)
         { }
-
         public DbSet<City> Cities { get; set; }
         public DbSet<Court> Courts { get; set; }
         public DbSet<CourtAttribute> CourtAttributes { get; set; }
@@ -29,17 +28,6 @@ namespace Models.Context
             {
                 relationship.DeleteBehavior = DeleteBehavior.Restrict;
             }
-            //var cascadeFKs = modelBuilder.Model.GetEntityTypes()
-            //    .SelectMany(t => t.GetForeignKeys())
-            //    .Where(fk => !fk.IsOwnership && fk.DeleteBehavior == DeleteBehavior.Cascade);
-            //foreach (var fk in cascadeFKs)
-            //    fk.DeleteBehavior = DeleteBehavior.Restrict;
-
-            //modelBuilder.Entity<LawsuitData>().HasOne(x => x.Lawsuit).WithMany().HasForeignKey(x => x.lawsuitID).OnDelete(DeleteBehavior.NoAction);
-
-            //modelBuilder.Entity<Lawsuit>().HasMany(x => x.LawsuitData).WithOne().HasForeignKey(x => x.lawsuitID).OnDelete(DeleteBehavior.NoAction);
-
-            //modelBuilder.Entity<LawsuitData>().HasOne(x => x.CourtAttribute).WithMany().HasForeignKey(x => x.courtAttributeID).OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<CourtType>().HasKey(sc => new { sc.courtId, sc.typeID });
 
