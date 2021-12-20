@@ -1,5 +1,6 @@
 ﻿using Common.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
@@ -174,6 +175,29 @@ namespace CourtsCheckSystem.Controllers
             }
 
             return HttpStatusCode.OK;
+        }
+
+        [AllowAnonymous]
+        [Microsoft.AspNetCore.Mvc.HttpGet]
+        [Microsoft.AspNetCore.Mvc.Route("~/api/getLawsuits")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public IActionResult getLawsuits()
+        {
+            //authorization
+            string accessToken = Request.Headers[HeaderNames.Authorization];
+            if (String.IsNullOrEmpty(accessToken))
+            {
+                return BadRequest("Missing header");
+            }
+            //WARN: to delete userID
+            Guid robotID = new Guid("71967346-b744-469b-b8d7-159530990028");
+            string robotName = "justiceBG";
+            robotName = "Върховен касационен съд";
+            string result = lawsuitService.GetActiveLawsuitsListByRobot(robotName);
+            //string result = lawsuitService.GetActiveLawsuitsListByRobot(userID);
+            return Ok(result);
         }
     }
 }

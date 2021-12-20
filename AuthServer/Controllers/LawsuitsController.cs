@@ -29,7 +29,6 @@ namespace CourtsCheckSystem.Controllers
         [Route("~/api/sendUserLawsuits")]
         public HttpStatusCode UserLawsuits([FromBody] UserLawsuitsDataVM lawsuits)
         {
-            lawsuitService.UploadData();
             //user authorization
             string accessToken = Request.Headers[HeaderNames.Authorization];
             if (String.IsNullOrEmpty(accessToken))
@@ -71,7 +70,7 @@ namespace CourtsCheckSystem.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public IActionResult ChangedLawsuits([FromBody] UserVM user)
         {
-            //authorization
+            //user authorization
             string accessToken = Request.Headers[HeaderNames.Authorization];
             if (String.IsNullOrEmpty(accessToken))
             {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Models.Context;
-using Models.Entities;
 using Models.Contracts;
+using Models.Entities;
 using Models.ViewModels;
 using System;
 using System.Linq;
@@ -15,6 +15,7 @@ namespace Models.Services
             this.db = context;
         }
 
+        //Get list of all users
         public IQueryable<UserVM> GetUsersList()
         {
             IQueryable<UserVM> q1 = db.Users.Where(x => x.deletedAt != null).Select
@@ -34,6 +35,7 @@ namespace Models.Services
             return q1;
         }
 
+        //Create new user
         public bool AddUser(UserVM _model)
         {
             User _user = new User();
@@ -56,6 +58,7 @@ namespace Models.Services
             }
         }
 
+        //Update already existing user
         public bool UpdateUser(UserVM _model)
         {
             if (_model.UUID != "")
@@ -88,6 +91,7 @@ namespace Models.Services
             return false;
         }
 
+        //Get a user by GUID
         public UserVM GetUserByUUID(Guid _UUID)
         {
             UserVM _user = new UserVM();
@@ -108,6 +112,7 @@ namespace Models.Services
             return _user;
         }
 
+        //Get a user by ID
         public UserVM GetUserByIdentityID(Guid _identityID)
         {
             UserVM _user = new UserVM();
@@ -128,6 +133,7 @@ namespace Models.Services
             return _user;
         }
 
+        //Delete a user by GUID
         public bool DeleteUser(Guid _UUID)
         {
             try
@@ -144,6 +150,7 @@ namespace Models.Services
             }
         }
 
+        //Hard delete a user by GUID
         public bool HardDeleteUser(Guid _UUID)
         {
             try
@@ -158,7 +165,5 @@ namespace Models.Services
                 return false;
             }
         }
-
-
     }
 }

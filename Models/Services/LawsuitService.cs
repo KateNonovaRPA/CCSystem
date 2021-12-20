@@ -17,7 +17,6 @@ namespace Models.Services
         {
             this.db = context;
         }
-
         public IQueryable<LawsuitVM> GetActiveLawsuitsListByCourtID(int courtID)
         {
             //IQueryable<UserLawsuitDataVM> list = this.db.UserLawsuits.Join().Where()
@@ -31,6 +30,47 @@ namespace Models.Services
             lawsuits = lawsuits.Distinct();
 
             return lawsuits;
+        }
+
+        public string GetActiveLawsuitsListByRobot(string robotName)
+        {
+            IQueryable<UserLawsuitDataVM> lawsuits = null;
+            if (robotName == "justiceBG")
+            {
+
+                lawsuits = db.UserLawsuits.Where(x => x.active == true).Select(lawsuit => new UserLawsuitDataVM()
+                {
+                    case_number = lawsuit.Lawsuit.lawsuitNumber.ToString(),
+                    type= lawsuit.Lawsuit.Type.name,
+                    court =  lawsuit.Lawsuit.Court.fullName,
+                    city = (lawsuit.Lawsuit.Court.City != null) ? lawsuit.Lawsuit.Court.City.name : "",
+                }) ;
+               
+            }
+            else if (robotName == "Върховен касационен съд")
+            {
+                lawsuits = db.UserLawsuits.Where(x => x.active == true && x.Lawsuit.Court.name == robotName).Select(lawsuit => new UserLawsuitDataVM()
+                {
+                    case_number = lawsuit.Lawsuit.lawsuitNumber.ToString(),
+                    type= lawsuit.Lawsuit.Type.name,
+                    court =  lawsuit.Lawsuit.Court.fullName,
+                });
+
+            }
+            else if (robotName == "Софийски районен съд")
+            {
+                lawsuits = db.UserLawsuits.Where(x => x.active == true && x.Lawsuit.Court.name == robotName).Select(lawsuit => new UserLawsuitDataVM()
+                {
+                    case_number = lawsuit.Lawsuit.lawsuitNumber.ToString(),
+                    type= lawsuit.Lawsuit.Type.name,
+                    court =  lawsuit.Lawsuit.Court.fullName,
+                    city = (lawsuit.Lawsuit.Court.City != null) ? lawsuit.Lawsuit.Court.City.name : "",
+                });
+            }
+            if(lawsuits != null)
+                lawsuits = lawsuits.Distinct();
+            string result = JsonConvert.SerializeObject(lawsuits);
+            return result;
         }
 
         public LawsuitVM GetLawsuitByNumber(string lawsuitNumber)
@@ -183,7 +223,7 @@ namespace Models.Services
             {
                 List<KeyValuePair<string, string>> lastLawsuitDictionary = new List<KeyValuePair<string, string>>();
                 Court court = db.Courts.Where(u => u.fullName == courtName).FirstOrDefault();
-                Lawsuit lawsuit = db.Lawsuits.Where(u => u.lawsuitNumber == lawsuitNumber).FirstOrDefault();
+                Lawsuit lawsuit = db.Lawsuits.Where(u => u.lawsuitNumber == lawsuitNumber && u.courtID == court.ID).FirstOrDefault();
 
                 //WARN: only for test!!!!
                 if (lawsuit == null)
@@ -373,8 +413,8 @@ namespace Models.Services
         }
 
         //WARN: for test
-        public void UploadData()
-        {
+        //public void UploadData()
+        //{
             ////if (db.Cities.Count() == 0)
             ////{
             ////Upload Courts
@@ -428,7 +468,7 @@ namespace Models.Services
             //    i++;
             //    //AddLawsuitType(currentRow[0].ToString());
             //}
-        }
+        //}
 
     }
 }

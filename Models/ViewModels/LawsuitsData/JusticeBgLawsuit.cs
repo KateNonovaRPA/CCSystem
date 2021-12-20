@@ -1,7 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Models.ViewModels.LawsuitsData
 {
@@ -12,6 +10,7 @@ namespace Models.ViewModels.LawsuitsData
 
         [JsonProperty("case_type")]
         public string case_type { get; set; }
+
         public string case_number { get; set; }
         public List<CaseAct> case_acts { get; set; }
 
@@ -20,6 +19,7 @@ namespace Models.ViewModels.LawsuitsData
 
         [JsonProperty("department")]
         public string department { get; set; }
+
         public List<CaseSession> case_sessions { get; set; }
 
         [JsonProperty("court")]
@@ -27,8 +27,8 @@ namespace Models.ViewModels.LawsuitsData
 
         [JsonProperty("case_date")]
         public string case_date { get; set; }
-              
     }
+
     public class CaseAct
     {
         public string act_judge { get; set; }
