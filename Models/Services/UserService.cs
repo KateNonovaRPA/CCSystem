@@ -24,9 +24,9 @@ namespace Models.Services
                               {
                                   UUID = user.UUID.ToString(),
                                   identityID = user.identityID.ToString(),
-                                  administrationName = user.administrationName.ToString(),
-                                  name = user.name.ToString(),
-                                  email = user.email.ToString(),
+                                  firstName = user.FirstName.ToString(),
+                                  lastName = user.LastName.ToString(),
+                                  email = user.Email.ToString(),
                                   createdAt = user.createdAt,
                                   updatedAt = user.updatedAt,
                                   deletedAt = (user.deletedAt !=null) ? user.deletedAt : null,
@@ -43,9 +43,9 @@ namespace Models.Services
             {
                 _user.UUID = new Guid();
                 _user.identityID = Guid.Empty;
-                _user.administrationName = _model.administrationName;
-                _user.name = _model.name;
-                _user.email = _model.email;
+                _user.Email = _model.email;
+                _user.FirstName = _model.firstName;
+                _user.LastName = _model.lastName;
                 _user.createdAt = _model.createdAt;
 
                 db.Users.Add(_user);
@@ -65,10 +65,9 @@ namespace Models.Services
             {
                 User _user = new User();
 
-                _user.administrationName = _model.administrationName;
-                _user.name = _model.name;
-                _user.email = _model.email;
-                _user.administrationName = _model.administrationName;
+                _user.Email = _model.email;
+                _user.FirstName = _model.firstName;
+                _user.LastName = _model.lastName;
                 _user.identityID = Guid.Parse(_model.identityID);
 
                 try
@@ -100,10 +99,9 @@ namespace Models.Services
             {
                 _user.UUID = user.UUID.ToString();
                 _user.identityID = user.identityID.ToString();
-                _user.administrationName = user.administrationName;
-                _user.administrationName = user.administrationName;
-                _user.name = user.name;
-                _user.email = user.email;
+                _user.email = user.Email;
+                _user.firstName = user.FirstName;
+                _user.lastName = user.LastName;
                 _user.createdAt = user.createdAt;
                 _user.updatedAt = user.updatedAt;
                 _user.deletedAt = user.deletedAt;
@@ -121,10 +119,9 @@ namespace Models.Services
             {
                 _user.UUID = user.UUID.ToString();
                 _user.identityID = user.identityID.ToString();
-                _user.administrationName = user.administrationName;
-                _user.administrationName = user.administrationName;
-                _user.name = user.name;
-                _user.email = user.email;
+                _user.email = user.Email;
+                _user.firstName = user.FirstName;
+                _user.lastName = user.LastName;
                 _user.createdAt = user.createdAt;
                 _user.updatedAt = user.updatedAt;
                 _user.deletedAt = user.deletedAt;

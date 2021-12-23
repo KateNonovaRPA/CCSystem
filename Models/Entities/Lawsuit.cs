@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace Models.Entities
 {
@@ -14,7 +13,10 @@ namespace Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ID { get; set; }
 
-        public string lawsuitNumber { get; set; }
+        public string? lawsuitNumber { get; set; }
+
+        [Required]
+        public string lawsuitEntryNumber { get; set; }
 
         [Column("typeID", TypeName = "int")]
         public int typeID { get; set; }

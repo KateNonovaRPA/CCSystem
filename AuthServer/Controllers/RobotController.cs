@@ -31,24 +31,30 @@ namespace CourtsCheckSystem.Controllers
         // post data from the robot
         [AllowAnonymous]
         [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.Route("~/api/robot/SendLawsuitData")]
-        public HttpStatusCode SendLawsuitData([FromBody] RobotData robotData)
+        [Microsoft.AspNetCore.Mvc.Route("~/api/robot/lawsuitData")]
+        public IActionResult lawsuitData([FromBody] RobotData robotData)
         {
             //user validation
             string accessToken = Request.Headers[HeaderNames.Authorization];
             if (String.IsNullOrEmpty(accessToken))
             {
-                return HttpStatusCode.Forbidden;
+                return Unauthorized("Missing header.");
+            }
+            if(robotData == null)
+            {
+                return BadRequest("The data is not in the correct format.");
             }
             ListWithDuplicates lawsuitDictiony = new ListWithDuplicates();
             string court = "";
             string lawsuitNumber = "";
+            string lawsuitEntryNumber = "";
             try
             {
                 if (robotData.justiceBgLawsuit != null)
                 {
                     court = robotData.justiceBgLawsuit.court;
                     lawsuitNumber = robotData.justiceBgLawsuit.case_number;
+                    lawsuitEntryNumber = robotData.justiceBgLawsuit.case_entry_number;
                     if (robotData.justiceBgLawsuit.case_sessions.Count > 0)
                     {
                         foreach (var item in robotData.justiceBgLawsuit.case_sessions)
@@ -75,6 +81,7 @@ namespace CourtsCheckSystem.Controllers
                 {
                     court = "Върховен касационен съд";
                     lawsuitNumber = robotData.VKSLawsuit.case_number;
+                    lawsuitEntryNumber = robotData.VKSLawsuit.case_entry_number;
                     if (robotData.VKSLawsuit.session_details.Count > 0)
                     {
                         foreach (var item in robotData.VKSLawsuit.session_details)
@@ -108,6 +115,7 @@ namespace CourtsCheckSystem.Controllers
                 {
                     court = "Софийски районен съд";
                     lawsuitNumber = robotData.SRSLawsuit.case_number;
+                    lawsuitEntryNumber = robotData.SRSLawsuit.case_entry;
                     if (robotData.SRSLawsuit.case_acts.Count > 0)
                     {
                         foreach (var item in robotData.SRSLawsuit.case_acts)
@@ -132,64 +140,61 @@ namespace CourtsCheckSystem.Controllers
                     Dictionary<string, string> lawsuitInfo = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(robotData.SRSLawsuit));
                     lawsuitDictiony.Add(lawsuitInfo);
                 }
-                lawsuitService.UploadLawsuitData(court, lawsuitNumber, lawsuitDictiony);
-                return HttpStatusCode.OK;
+                lawsuitService.UploadLawsuitData(court, lawsuitEntryNumber, lawsuitNumber, lawsuitDictiony);
+                return Ok();
             }
             catch (Exception ex)
             {
                 logger.LogError("Post lawsuits data:" + court, ex);
                 logger.LogDebug(lawsuitNumber);
-                return HttpStatusCode.BadRequest;
+                return BadRequest();
             }
         }
 
-        [AllowAnonymous]
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.Route("~/api/UserLawsuits")]
-        public HttpStatusCode UserLawsuits([FromBody] UserLawsuitsDataVM lawsuits)
-        {
-            //user authorization
-            Guid userID = new Guid("71967346-b744-469b-b8d7-159530990028");
+        //[AllowAnonymous]
+        //[Microsoft.AspNetCore.Mvc.HttpPost]
+        //[Microsoft.AspNetCore.Mvc.Route("~/api/userLawsuits")]
+        //public HttpStatusCode userLawsuits([FromBody] UserLawsuitsDataVM lawsuits)
+        //{
+        //    //user authorization
+        //    Guid userID = new Guid("71967346-b744-469b-b8d7-159530990028");
 
-            try
-            {
-                if (lawsuits !=null)
-                {
-                    //Inactive all user's lawsuits
-                    lawsuitService.InactivateAllUserLawsuits(userID);
-                    foreach (UserLawsuitDataVM currentLawsuit in lawsuits.cases)
-                    {
-                        //GetLawsuitID
-                        LawsuitVM lawsuitVM = lawsuitService.GetLawsuitByNumber(currentLawsuit.case_number);
-                        if (lawsuitVM.ID == 0)
-                            lawsuitVM = lawsuitService.CreateLawsuit(currentLawsuit);
-                        //Make the lawsuit active for the current userme
-                        lawsuitService.ActivateLawsuit(userID, lawsuitVM.ID);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError("User Lawsuits:", ex);
-                return HttpStatusCode.BadRequest;
-            }
+        //    try
+        //    {
+        //        if (lawsuits !=null)
+        //        {
+        //            //Inactive all user's lawsuits
+        //            lawsuitService.InactivateAllUserLawsuits(userID);
+        //            foreach (UserLawsuitDataVM currentLawsuit in lawsuits.cases)
+        //            {
+        //                //GetLawsuitID
+        //                LawsuitVM lawsuitVM = lawsuitService.GetLawsuitByEntryNumber(currentLawsuit.case_entry_number);
+        //                if (lawsuitVM.ID == 0)
+        //                    lawsuitVM = lawsuitService.CreateLawsuit(currentLawsuit);
+        //                //Make the lawsuit active for the current userme
+        //                lawsuitService.ActivateLawsuit(userID, lawsuitVM.ID);
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logger.LogError("User Lawsuits:", ex);
+        //        return HttpStatusCode.BadRequest;
+        //    }
 
-            return HttpStatusCode.OK;
-        }
+        //    return HttpStatusCode.OK;
+        //}
 
         [AllowAnonymous]
         [Microsoft.AspNetCore.Mvc.HttpGet]
-        [Microsoft.AspNetCore.Mvc.Route("~/api/getLawsuits")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public IActionResult getLawsuits()
+        [Microsoft.AspNetCore.Mvc.Route("~/api/robot/lawsuitsForChecking")]
+        public IActionResult lawsuitsForChecking()
         {
             //authorization
             string accessToken = Request.Headers[HeaderNames.Authorization];
             if (String.IsNullOrEmpty(accessToken))
             {
-                return BadRequest("Missing header");
+                return Unauthorized("Missing header");
             }
             //WARN: to delete userID
             Guid robotID = new Guid("71967346-b744-469b-b8d7-159530990028");

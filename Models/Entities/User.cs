@@ -13,10 +13,10 @@ namespace Models.Entities
 
         public Guid identityID { get; set; }
 
-        public string processorID { get; set; }
-        public string administrationName { get; set; }
-        public string name { get; set; }
-        public string email { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
 
         [DataType(DataType.DateTime)]
         public DateTime createdAt { get; set; }

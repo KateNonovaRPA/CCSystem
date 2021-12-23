@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace Models.ViewModels
 {
@@ -9,9 +7,12 @@ namespace Models.ViewModels
     {
         public string UUID { get; set; }
         public string identityID { get; set; }
-        public string processorID { get; set; }
-        public string administrationName { get; set; }
-        public string name { get; set; }
+        public string firstName { get; set; }
+        public string lastName { get; set; }
+
+        [JsonIgnore]
+        public string Password { get; set; }
+
         public string email { get; set; }
         public DateTime createdAt { get; set; }
         public DateTime updatedAt { get; set; }

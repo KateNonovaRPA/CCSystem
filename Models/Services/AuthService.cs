@@ -4,6 +4,11 @@ using Models.Entities;
 using Models.Contracts;
 using System;
 using System.Linq;
+using System.Text;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace Models.Services
 {
@@ -41,9 +46,9 @@ namespace Models.Services
                     {
                         return false;
                     };
-                    _user.administrationName = saved.administrationName;
-                    _user.email = saved.email;
-                    _user.name = saved.name;
+                    _user.Email = saved.Email;
+                    _user.FirstName = saved.FirstName;
+                    _user.LastName = saved.LastName;
                     _user.createdAt = saved.createdAt;
                     _user.updatedAt = DateTime.Now;
                     _user.deletedAt = saved.deletedAt;
@@ -75,9 +80,8 @@ namespace Models.Services
                         return false;
                     };
 
-                    _user.administrationName = saved.administrationName;
-                    _user.email = saved.email;
-                    _user.name = saved.name;
+                    _user.Email = saved.Email;
+                    _user.FirstName = saved.FirstName;
                     _user.createdAt = saved.createdAt;
                     _user.updatedAt = DateTime.Now;
                     _user.deletedAt = saved.deletedAt;
@@ -94,6 +98,33 @@ namespace Models.Services
                 }
             }
             return false;
+        }
+
+        private readonly string tokenKey;
+
+       
+        public string Authenticate(string username, string password)
+        {
+            if (!db.Users.Any(u => u.Email == username && u.Password == password))
+            {
+                return null;
+            }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(tokenKey);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, username)
+                }),
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
     }
 }

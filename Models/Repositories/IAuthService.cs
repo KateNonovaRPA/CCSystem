@@ -9,5 +9,7 @@ namespace Models.Contracts
         bool AuthorizeUser(Guid _UUID);
 
         bool DeAuthorizeUser(Guid _UUID);
+
+        
     }
 }

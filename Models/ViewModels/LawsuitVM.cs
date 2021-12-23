@@ -8,6 +8,7 @@ namespace Models.ViewModels
     {
         public int ID { get; set; }
         public string lawsuitNumber { get; set; }
+        public string lawsuitEntryNumber { get; set; }
         public int typeId { get; set; }
         public string type { get; set; }
         public int courtID { get; set; }

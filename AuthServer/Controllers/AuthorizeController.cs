@@ -3,12 +3,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Models.Contracts;
+using Models.Repositories;
 using Models.ViewModels;
 using System;
 using System.Diagnostics;
 using System.Text.Json;
 
-namespace AuthServer.Controllers
+namespace CourtsCheckSystem.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -16,11 +17,32 @@ namespace AuthServer.Controllers
     {
         private readonly ILogger<AuthorizeController> logger;
         private readonly IAuthService authService;
+        private readonly IJWTAuthenticationService jwtAuthService;
 
-        public AuthorizeController(ILogger<AuthorizeController> _logger, IAuthService _authService)
+        public AuthorizeController(ILogger<AuthorizeController> _logger, IAuthService _authService, IJWTAuthenticationService _jwtAuthService)
         {
             logger = _logger;
             authService = _authService;
+            jwtAuthService = _jwtAuthService;
+        }
+
+        [AllowAnonymous]
+        [HttpPost("authenticate")]
+        [Microsoft.AspNetCore.Mvc.Route("~/api/authenticate")]
+        public IActionResult Authenticate([FromBody] UserCred userCred)
+        {
+            var token = jwtAuthService.Authenticate(userCred.Username, userCred.Password);
+
+            if (token == null)
+                return Unauthorized();
+
+            return Ok(token);
+        }
+
+        public class UserCred
+        {
+            public string Username { get; set; }
+            public string Password { get; set; }
         }
 
         // POST: api/Authorize/GetAuthorization
@@ -33,7 +55,7 @@ namespace AuthServer.Controllers
             string decryptedRequest = EncriptionHelper.Decrypt(_encRequest.Request, _encRequest.ReqID.ToString());
             string decodedRequest = Base64UrlEncoder.Encoder.Decode(decryptedRequest);
 
-            AuthRequestVM authRequest = JsonSerializer.Deserialize<AuthRequestVM>(decodedRequest);
+            AuthRequestVM authRequest = JsonSerializer.Deserialize<AuthRequestVM>(decryptedRequest);
 
             //TODO: Use service that authorize the request!
 

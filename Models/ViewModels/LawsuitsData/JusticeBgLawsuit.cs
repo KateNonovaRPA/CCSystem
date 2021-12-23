@@ -12,13 +12,14 @@ namespace Models.ViewModels.LawsuitsData
         public string case_type { get; set; }
 
         public string case_number { get; set; }
+        public string case_code { get; set; }
         public List<CaseAct> case_acts { get; set; }
 
-        [JsonProperty("incomingNumber")]
-        public string incomingNumber { get; set; }
+        [JsonProperty("case_entry_number")]
+        public string case_entry_number { get; set; }
 
-        [JsonProperty("department")]
-        public string department { get; set; }
+        [JsonProperty("case_collegiality")]
+        public string case_collegiality { get; set; }
 
         public List<CaseSession> case_sessions { get; set; }
 
@@ -27,6 +28,7 @@ namespace Models.ViewModels.LawsuitsData
 
         [JsonProperty("case_date")]
         public string case_date { get; set; }
+        public string subject_matter { get; set; }
     }
 
     public class CaseAct

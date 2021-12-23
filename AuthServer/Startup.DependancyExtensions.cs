@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Models.Contracts;
+using Models.Repositories;
 using Models.Services;
 
 namespace AuthServer

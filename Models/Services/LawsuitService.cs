@@ -19,11 +19,10 @@ namespace Models.Services
         }
         public IQueryable<LawsuitVM> GetActiveLawsuitsListByCourtID(int courtID)
         {
-            //IQueryable<UserLawsuitDataVM> list = this.db.UserLawsuits.Join().Where()
             IQueryable<LawsuitVM> lawsuits = db.Lawsuits.Where(x => x.courtID == courtID).GroupJoin(db.UserLawsuits, u => u.ID, ul => ul.lawsuitID, (u, ul) => new { u, ul }).
                 Select(lawsuit => new LawsuitVM()
                 {
-                    lawsuitNumber = lawsuit.u.lawsuitNumber,
+                    lawsuitEntryNumber = lawsuit.u.lawsuitEntryNumber,
                     typeId = lawsuit.u.typeID,
                     courtID = lawsuit.u.courtID,
                 });
@@ -40,20 +39,21 @@ namespace Models.Services
 
                 lawsuits = db.UserLawsuits.Where(x => x.active == true).Select(lawsuit => new UserLawsuitDataVM()
                 {
-                    case_number = lawsuit.Lawsuit.lawsuitNumber.ToString(),
+                    case_entry_number = lawsuit.Lawsuit.lawsuitEntryNumber.ToString(),
                     type= lawsuit.Lawsuit.Type.name,
                     court =  lawsuit.Lawsuit.Court.fullName,
                     city = (lawsuit.Lawsuit.Court.City != null) ? lawsuit.Lawsuit.Court.City.name : "",
-                }) ;
-               
+                });
+
             }
             else if (robotName == "Върховен касационен съд")
             {
                 lawsuits = db.UserLawsuits.Where(x => x.active == true && x.Lawsuit.Court.name == robotName).Select(lawsuit => new UserLawsuitDataVM()
                 {
-                    case_number = lawsuit.Lawsuit.lawsuitNumber.ToString(),
+                    case_entry_number = lawsuit.Lawsuit.lawsuitEntryNumber.ToString(),
                     type= lawsuit.Lawsuit.Type.name,
                     court =  lawsuit.Lawsuit.Court.fullName,
+                    city = "",
                 });
 
             }
@@ -61,13 +61,13 @@ namespace Models.Services
             {
                 lawsuits = db.UserLawsuits.Where(x => x.active == true && x.Lawsuit.Court.name == robotName).Select(lawsuit => new UserLawsuitDataVM()
                 {
-                    case_number = lawsuit.Lawsuit.lawsuitNumber.ToString(),
+                    case_entry_number = lawsuit.Lawsuit.lawsuitEntryNumber.ToString(),
                     type= lawsuit.Lawsuit.Type.name,
                     court =  lawsuit.Lawsuit.Court.fullName,
                     city = (lawsuit.Lawsuit.Court.City != null) ? lawsuit.Lawsuit.Court.City.name : "",
                 });
             }
-            if(lawsuits != null)
+            if (lawsuits != null)
                 lawsuits = lawsuits.Distinct();
             string result = JsonConvert.SerializeObject(lawsuits);
             return result;
@@ -110,6 +110,43 @@ namespace Models.Services
             return _lawsuit;
         }
 
+        public LawsuitVM GetLawsuitByEntryNumber(string lawsuitEntryNumber)
+        {
+            LawsuitVM _lawsuit = new LawsuitVM();
+            try
+            {
+                Lawsuit lawsuit = db.Lawsuits.Where(l => l.lawsuitEntryNumber == lawsuitEntryNumber).FirstOrDefault();
+                if (lawsuit != null)
+                {
+                    //_lawsuit.lawsuitNumber = lawsuit.lawsuitNumber;
+                    _lawsuit.lawsuitEntryNumber = lawsuit.lawsuitEntryNumber;
+                    _lawsuit.type = db.LawsuitTypes.Where(e => e.ID==lawsuit.typeID).FirstOrDefault().name;
+                    _lawsuit.court = db.Courts.Where(c => c.ID == lawsuit.courtID).FirstOrDefault().name.ToString();
+                    _lawsuit.createdAt =lawsuit.createdAt.ToString("dd-MM-yyyy");
+                    _lawsuit.ID =lawsuit.ID;
+
+                    List<LawsuitDataVM> lawsuitDataVMs = new List<LawsuitDataVM>();
+                    LawsuitData lastLawsuitData = db.LawsuitData.Where(u => u.lawsuitID == lawsuit.ID).OrderByDescending(u => u.createdAt).FirstOrDefault();
+                    int lastChangeNumber = (lastLawsuitData != null) ? lastLawsuitData.changeNumber : 0;
+                    if (lastLawsuitData != null)
+                    {
+                        List<LawsuitData> lawsuitDataList = db.LawsuitData.Include(a => a.CourtAttribute).Where(u => u.lawsuitID == lawsuit.ID && u.changeNumber == lastChangeNumber).ToList();
+                        foreach (LawsuitData lawsuitData in lawsuitDataList)
+                        {
+                            LawsuitDataVM lawsuitDataVM = new LawsuitDataVM();
+                            lawsuitDataVM.attributeName = lawsuitData.CourtAttribute.attributeName;
+                            lawsuitDataVM.data = lawsuitData.data;
+                            lawsuitDataVM.createdAt = lawsuitData.createdAt.ToString("dd-MM-yyyy");
+                            lawsuitDataVMs.Add(lawsuitDataVM);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+            return _lawsuit;
+        }
         public List<LawsuitVM> GetLawsuitsByUser(Guid userID)
         {
             List<LawsuitVM> lawsuits = new List<LawsuitVM>();
@@ -149,7 +186,7 @@ namespace Models.Services
                     db.SaveChanges();
                 }
 
-                lawsuit.lawsuitNumber = _model.case_number;
+                lawsuit.lawsuitEntryNumber = _model.case_entry_number;
                 lawsuit.typeID = lawsuitType.ID;
                 lawsuit.courtID = court.ID;
                 lawsuit.createdAt = DateTime.Now;
@@ -217,13 +254,13 @@ namespace Models.Services
             return true;
         }
 
-        public bool UploadLawsuitData(string courtName, string lawsuitNumber, List<KeyValuePair<string, string>> newLawsuitData)
+        public bool UploadLawsuitData(string courtName, string lawsuitEntryNumber, string lawsuitNumber, List<KeyValuePair<string, string>> newLawsuitData)
         {
             try
             {
                 List<KeyValuePair<string, string>> lastLawsuitDictionary = new List<KeyValuePair<string, string>>();
                 Court court = db.Courts.Where(u => u.fullName == courtName).FirstOrDefault();
-                Lawsuit lawsuit = db.Lawsuits.Where(u => u.lawsuitNumber == lawsuitNumber && u.courtID == court.ID).FirstOrDefault();
+                Lawsuit lawsuit = db.Lawsuits.Where(u => u.lawsuitEntryNumber == lawsuitEntryNumber && u.courtID == court.ID).FirstOrDefault();
 
                 //WARN: only for test!!!!
                 if (lawsuit == null)
@@ -240,6 +277,7 @@ namespace Models.Services
                     }
                     lawsuit = new Lawsuit()
                     {
+                        lawsuitEntryNumber = lawsuitEntryNumber,
                         lawsuitNumber = lawsuitNumber,
                         courtID = court.ID,
                         Court = court,
@@ -273,6 +311,12 @@ namespace Models.Services
                     if ((lastLawsuitDataList.Count != newLawsuitData.Count || !lastLawsuitDictionary.SequenceEqual(newLawsuitData)) && newLawsuitData.Count>0)
                     {
                         CreateLawsuitData(court.ID, lawsuit.ID, newLawsuitData, lastChangeNumber);
+                    }
+                    if (String.IsNullOrEmpty(lawsuit.lawsuitNumber) && !String.IsNullOrEmpty(lawsuitNumber))
+                    {
+                        lawsuit.lawsuitNumber = lawsuitNumber;
+                        db.Update(lawsuit);
+                        db.SaveChanges();
                     }
                 }
                 else  // create new LawsuitData, there isn't previous
@@ -345,18 +389,22 @@ namespace Models.Services
             try
             {
                 List<int> test = db.UserLawsuits.Where(u => u.active == true).Select(u => u.lawsuitID).ToList();
-                List<Lawsuit> userLawsuits = db.Lawsuits.Where(t => test.Contains(t.ID)  && t.updatedAt.Date == DateTime.Today.Date).ToList();
+                List<Lawsuit> userLawsuits = db.Lawsuits.Include(t => t.Court).Include(t => t.Type).Where(t => test.Contains(t.ID)  && t.updatedAt.Date == DateTime.Today.Date).ToList();
                 List<ChangedLawsuitData> allChangedData = new List<ChangedLawsuitData>();
                 foreach (Lawsuit userLawsuit in userLawsuits)
                 {
                     ChangedLawsuitData lawsuitData = new ChangedLawsuitData()
                     {
-                        lawsuitNumber = userLawsuit.lawsuitNumber,
-                        city = userLawsuit.Court.City.name,
+                        lawsuitEntryNumber = userLawsuit.lawsuitEntryNumber,
                         court = userLawsuit.Court.name,
+                        city = (String.IsNullOrEmpty(userLawsuit.Court.cityId.ToString())) ? "" : db.Cities.Where(c => c.ID == userLawsuit.Court.cityId).FirstOrDefault().name,
                     };
                     int lawsuitTypeID = userLawsuit.Type.lawsuitTypeDictionaryID.GetValueOrDefault();
-                    string type = db.LawsuitTypeDictionary.Where(d => d.ID == lawsuitTypeID).FirstOrDefault().name;
+                    //WARN: match types
+                    if (lawsuitTypeID != 0)
+                    {
+                        string type = db.LawsuitTypeDictionary.Where(d => d.ID == lawsuitTypeID).FirstOrDefault().name;
+                    }
                     allChangedData.Add(lawsuitData);
                 }
                 jsonresp = JsonConvert.SerializeObject(allChangedData);
@@ -372,6 +420,7 @@ namespace Models.Services
             LawsuitVM lawsuitVM = new LawsuitVM();
             if (lawsuit != null)
             {
+                lawsuitVM.lawsuitEntryNumber = lawsuit.lawsuitEntryNumber;
                 lawsuitVM.lawsuitNumber = lawsuit.lawsuitNumber;
                 lawsuitVM.ID = lawsuit.ID;
                 lawsuitVM.courtID = lawsuit.courtID;
@@ -415,59 +464,59 @@ namespace Models.Services
         //WARN: for test
         //public void UploadData()
         //{
-            ////if (db.Cities.Count() == 0)
-            ////{
-            ////Upload Courts
-            //DataTable excelDt = ExportToDataTable(@"data\Courts.xlsx");
-            //try
-            //{
-            //    foreach (DataRow currentRow in excelDt.Rows)
-            //    {
-            //        string cellData = currentRow[0].ToString();
-            //        string[] subs = SplitString(cellData);
-            //        AddCity((subs.Length >1) ? subs[1].Remove(0, 1) : "", subs[0], cellData);
+        ////if (db.Cities.Count() == 0)
+        ////{
+        ////Upload Courts
+        //DataTable excelDt = ExportToDataTable(@"data\Courts.xlsx");
+        //try
+        //{
+        //    foreach (DataRow currentRow in excelDt.Rows)
+        //    {
+        //        string cellData = currentRow[0].ToString();
+        //        string[] subs = SplitString(cellData);
+        //        AddCity((subs.Length >1) ? subs[1].Remove(0, 1) : "", subs[0], cellData);
 
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //}
-            ////}
-            ////string lines = "";
-            ////List<City> cities = new List<City>();
-            ////cities = db.Cities.ToList();
-            ////foreach (City city in cities)
-            ////{
-            ////    lines += "\n" + " new City { ID = "+city.ID+", name = \""+city.name+ "\" };";
-            ////}
+        //    }
+        //}
+        //catch (Exception ex)
+        //{
+        //}
+        ////}
+        ////string lines = "";
+        ////List<City> cities = new List<City>();
+        ////cities = db.Cities.ToList();
+        ////foreach (City city in cities)
+        ////{
+        ////    lines += "\n" + " new City { ID = "+city.ID+", name = \""+city.name+ "\" };";
+        ////}
 
-            //string courtLines = "";
-            //List<Court> courts = new List<Court>();
-            //courts = db.Courts.ToList();
+        //string courtLines = "";
+        //List<Court> courts = new List<Court>();
+        //courts = db.Courts.ToList();
 
-            //foreach (Court court in courts)
-            //{
-            //    if (court.cityId != null)
-            //    {
-            //        courtLines +=  "\n" + "new Court {  ID = "+court.ID+", name = \""+court.name+"\", fullName=\""+court.fullName+"\", cityId = "+court.cityId+", createdAt = DateTime.Now };";
-            //    }
-            //    else
-            //    {
-            //        courtLines +=  "\n" + "new Court {  ID = "+court.ID+", name = \""+court.name+"\", fullName=\""+court.fullName+"\", createdAt = DateTime.Now };";
-            //    }
-            //}
+        //foreach (Court court in courts)
+        //{
+        //    if (court.cityId != null)
+        //    {
+        //        courtLines +=  "\n" + "new Court {  ID = "+court.ID+", name = \""+court.name+"\", fullName=\""+court.fullName+"\", cityId = "+court.cityId+", createdAt = DateTime.Now };";
+        //    }
+        //    else
+        //    {
+        //        courtLines +=  "\n" + "new Court {  ID = "+court.ID+", name = \""+court.name+"\", fullName=\""+court.fullName+"\", createdAt = DateTime.Now };";
+        //    }
+        //}
 
-            ////if (db.LawsuitTypes.Count() == 0)
-            ////{
-            //DataTable excelDtTypes = ExportToDataTable(@"data\Case_Types.xlsx");
-            //string line = "";
-            //int i = 1;
-            //foreach (DataRow currentRow in excelDtTypes.Rows)
-            //{
-            //    line += "\n" + "new LawsuitTypeDictionary { ID = "+i+" name = \""+currentRow[0].ToString()+"\" },";
-            //    i++;
-            //    //AddLawsuitType(currentRow[0].ToString());
-            //}
+        ////if (db.LawsuitTypes.Count() == 0)
+        ////{
+        //DataTable excelDtTypes = ExportToDataTable(@"data\Case_Types.xlsx");
+        //string line = "";
+        //int i = 1;
+        //foreach (DataRow currentRow in excelDtTypes.Rows)
+        //{
+        //    line += "\n" + "new LawsuitTypeDictionary { ID = "+i+" name = \""+currentRow[0].ToString()+"\" },";
+        //    i++;
+        //    //AddLawsuitType(currentRow[0].ToString());
+        //}
         //}
 
     }

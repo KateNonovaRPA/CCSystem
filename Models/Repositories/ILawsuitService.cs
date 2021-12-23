@@ -13,11 +13,11 @@ namespace Models.Contracts
 
         bool InactivateAllUserLawsuits(Guid _UUID);
 
-        bool UploadLawsuitData(string court, string lawsuit, List<KeyValuePair<string, string>> newLawsuitData);
+        bool UploadLawsuitData(string court, string lawsuitEntryNumber, string lawsuitNumber, List<KeyValuePair<string, string>> newLawsuitData);
         IQueryable<LawsuitVM> GetActiveLawsuitsListByCourtID(int courtID);
         string GetActiveLawsuitsListByRobot(string robotName);
         LawsuitVM GetLawsuitByNumber(string lawsuitNumber);
-
+        LawsuitVM GetLawsuitByEntryNumber(string lawsuitEntryNumber);
         List<LawsuitVM> GetLawsuitsByUser(Guid userID);
         void AddCity(string city, string court, string both);
         void AddLawsuitType(string type);

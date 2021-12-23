@@ -26,8 +26,8 @@ namespace CourtsCheckSystem.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("~/api/sendUserLawsuits")]
-        public HttpStatusCode UserLawsuits([FromBody] UserLawsuitsDataVM lawsuits)
+        [Route("~/api/userLawsuits")]
+        public HttpStatusCode userLawsuits([FromBody] UserLawsuitsDataVM lawsuits)
         {
             //user authorization
             string accessToken = Request.Headers[HeaderNames.Authorization];
@@ -46,7 +46,7 @@ namespace CourtsCheckSystem.Controllers
                     foreach (UserLawsuitDataVM currentLawsuit in lawsuits.cases)
                     {
                         //GetLawsuitID
-                        LawsuitVM lawsuitVM = lawsuitService.GetLawsuitByNumber(currentLawsuit.case_number);
+                        LawsuitVM lawsuitVM = lawsuitService.GetLawsuitByEntryNumber(currentLawsuit.case_entry_number);
                         if (lawsuitVM == null || lawsuitVM.ID == 0)
                             lawsuitVM = lawsuitService.CreateLawsuit(currentLawsuit);
                         //Make the lawsuit active for the current userme
@@ -68,7 +68,7 @@ namespace CourtsCheckSystem.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public IActionResult ChangedLawsuits([FromBody] UserVM user)
+        public IActionResult changedLawsuits()
         {
             //user authorization
             string accessToken = Request.Headers[HeaderNames.Authorization];

@@ -1,25 +1,25 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Models.Context;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using System.Reflection;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authorization;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Localization;
-using System.Globalization;
-using Models;
-using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
-using Newtonsoft.Json.Serialization;
-using Microsoft.AspNetCore.HttpOverrides;
-
+using Microsoft.Extensions.Logging;
+using Models.Context;
+using System.Globalization;
+using System.Reflection;
+using System.Text;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Models.Repositories;
+using Models.Services;
 
 namespace AuthServer
 {
@@ -41,15 +41,13 @@ namespace AuthServer
                 options.UseSqlServer(Configuration.GetConnectionString("MainDB"),
                                     opt =>
                                     {
-
                                         opt.MigrationsAssembly(migrationsAssembly);
                                     });
             });
 
-
             string tmp = Configuration.GetConnectionString("MainDB");
 
-            // Url Helper configured for injection 
+            // Url Helper configured for injection
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
             services.AddScoped(x =>
             {
@@ -64,7 +62,6 @@ namespace AuthServer
                      options.AccessDeniedPath = "/Account/ErrorForbidden";
                      options.LoginPath = "/Account/Login";
                  });
-
 
             services.AddLocalization(options => options.ResourcesPath = "Resources");
             services.AddMvc(options =>
@@ -92,18 +89,36 @@ namespace AuthServer
                 options.SupportedCultures = supportedCultures;
                 options.SupportedUICultures = supportedCultures;
             });
-
+            var tokenKey = Configuration.GetValue<string>("TokenKey");
+            var key = Encoding.ASCII.GetBytes(tokenKey);
 
             services.ConfigureDI();
-
+            services.AddSingleton<IJWTAuthenticationService>(new JWTAuthenticationService(tokenKey));
             services.AddSignalR();
 
+           
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false
+                };
+            });
+            //services.AddSingleton<IAuthService>(new AuthService(tokenKey));
 
             services.Configure<IISOptions>(options =>
             {
                 options.ForwardClientCertificate = false;
             });
-
+           
+            services.AddHttpClient();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -125,14 +140,13 @@ namespace AuthServer
 
             app.UseAuthentication();
 
+            app.UseAuthorization();
+
             // Records exceptions and info to the POP Forums database.
             // logger.AddPopForumsLogger(app);
 
-
-
             app.UseMvc(routes =>
             {
-
                 routes.MapRoute(
                                   name: "page by id",
                                   template: "page/view/{id?}/{url?}",
@@ -149,8 +163,6 @@ namespace AuthServer
                                     name: "areaRoute",
                                     template: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
-
-
                 routes.MapRoute(
                                     name: "default",
                                     template: "{controller=Home}/{action=Index}/{id?}");
@@ -158,11 +170,9 @@ namespace AuthServer
                 routes.MapRoute(
                                     name: "lawsuits data",
                                     template: "{controller=Lawsuits}/{action=LawsuitsData}");
-
             });
 
             logger.AddLog4Net();
-
         }
     }
 }

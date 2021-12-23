@@ -45,7 +45,7 @@ namespace Models.Context
             .HasData(
 
            //WARN: only for test
-           new User { UUID = new System.Guid("71967346-b744-469b-b8d7-159530990028"), identityID =  new System.Guid("71967346-b744-469b-b8d7-159530990028"), name="test" });
+           new User { UUID = new System.Guid("71967346-b744-469b-b8d7-159530990028"), identityID =  new System.Guid("71967346-b744-469b-b8d7-159530990028"), FirstName="test" });
 
             modelBuilder.Entity<LawsuitTypeDictionary>().HasData(
                 new LawsuitTypeDictionary { ID = 1, name = "Административно дело" },
