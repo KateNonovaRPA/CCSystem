@@ -15,7 +15,7 @@ namespace Models.Contracts
 
         bool UploadLawsuitData(string court, string lawsuitEntryNumber, string lawsuitNumber, List<KeyValuePair<string, string>> newLawsuitData);
         IQueryable<LawsuitVM> GetActiveLawsuitsListByCourtID(int courtID);
-        string GetActiveLawsuitsListByRobot(string robotName);
+        IQueryable<UserLawsuitDataVM> GetActiveLawsuitsListByRobot(string robotName);
         LawsuitVM GetLawsuitByNumber(string lawsuitNumber);
         LawsuitVM GetLawsuitByEntryNumber(string lawsuitEntryNumber);
         List<LawsuitVM> GetLawsuitsByUser(Guid userID);

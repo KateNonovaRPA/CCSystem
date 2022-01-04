@@ -1,15 +1,15 @@
-﻿using System;
+﻿using Models.ViewModels;
+using System;
 
 namespace Models.Contracts
 {
     public interface IAuthService
     {
-        bool CheckAuthorization(String _UUID);
+        bool CheckAuthorization(string _accessToken, string userType);
 
-        bool AuthorizeUser(Guid _UUID);
+        string AuthorizeUser(UserVM user);
 
-        bool DeAuthorizeUser(Guid _UUID);
-
-        
+        bool DeAuthorizeUser(string clientID);
+                
     }
 }

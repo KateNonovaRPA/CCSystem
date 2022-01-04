@@ -15,7 +15,7 @@ namespace Models.Services
     {
         public LawsuitService(MainContext context)
         {
-            this.db = context;
+            db = context;
         }
         public IQueryable<LawsuitVM> GetActiveLawsuitsListByCourtID(int courtID)
         {
@@ -31,7 +31,7 @@ namespace Models.Services
             return lawsuits;
         }
 
-        public string GetActiveLawsuitsListByRobot(string robotName)
+        public IQueryable<UserLawsuitDataVM> GetActiveLawsuitsListByRobot(string robotName)
         {
             IQueryable<UserLawsuitDataVM> lawsuits = null;
             if (robotName == "justiceBG")
@@ -69,8 +69,8 @@ namespace Models.Services
             }
             if (lawsuits != null)
                 lawsuits = lawsuits.Distinct();
-            string result = JsonConvert.SerializeObject(lawsuits);
-            return result;
+            //string result = JsonConvert.SerializeObject(lawsuits);
+            return lawsuits;
         }
 
         public LawsuitVM GetLawsuitByNumber(string lawsuitNumber)
@@ -278,7 +278,7 @@ namespace Models.Services
                     lawsuit = new Lawsuit()
                     {
                         lawsuitEntryNumber = lawsuitEntryNumber,
-                        lawsuitNumber = lawsuitNumber,
+                        lawsuitNumber = (lawsuitNumber!=null) ? lawsuitNumber : "",
                         courtID = court.ID,
                         Court = court,
                         createdAt = DateTime.Now,

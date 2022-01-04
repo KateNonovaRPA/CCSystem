@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -12,14 +14,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Models.Context;
+using Models.Contracts;
+using Models.Services;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Models.Repositories;
-using Models.Services;
 
 namespace AuthServer
 {
@@ -36,6 +35,8 @@ namespace AuthServer
         public void ConfigureServices(IServiceCollection services)
         {
             var migrationsAssembly = typeof(MainContext).GetTypeInfo().Assembly.GetName().Name;
+            var optionsBuilder = new DbContextOptionsBuilder<MainContext>();
+            optionsBuilder.UseSqlServer(Configuration.GetConnectionString("MainDB"));
             services.AddDbContext<MainContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("MainDB"),
@@ -46,6 +47,14 @@ namespace AuthServer
             });
 
             string tmp = Configuration.GetConnectionString("MainDB");
+            var tokenKey = Configuration.GetValue<string>("TokenKey");
+            var key = Encoding.ASCII.GetBytes(tokenKey);
+
+            services.ConfigureDI();
+            // services.AddSingleton<IAuthService>(new AuthService(tokenKey));
+            //services.AddScoped<IAuthService>(_ => new AuthService(tokenKey));
+            services.AddSingleton<IAuthService>(new AuthService(tokenKey, optionsBuilder.Options));
+            services.AddSignalR();
 
             // Url Helper configured for injection
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
@@ -89,35 +98,45 @@ namespace AuthServer
                 options.SupportedCultures = supportedCultures;
                 options.SupportedUICultures = supportedCultures;
             });
-            var tokenKey = Configuration.GetValue<string>("TokenKey");
-            var key = Encoding.ASCII.GetBytes(tokenKey);
 
-            services.ConfigureDI();
-            services.AddSingleton<IJWTAuthenticationService>(new JWTAuthenticationService(tokenKey));
-            services.AddSignalR();
-
-           
-
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(x =>
-            {
-                x.RequireHttpsMetadata = false;
-                x.SaveToken = true;
-                x.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false
-                };
-            });
+            //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            //.AddJwtBearer(x =>
+            //{
+            //    x.RequireHttpsMetadata = false;
+            //    x.SaveToken = true;
+            //    x.TokenValidationParameters = new TokenValidationParameters
+            //    {
+            //        ValidateIssuerSigningKey = true,
+            //        IssuerSigningKey = new SymmetricSecurityKey(key),
+            //        ValidateIssuer = false,
+            //        ValidateAudience = false
+            //    };
+            //});
             //services.AddSingleton<IAuthService>(new AuthService(tokenKey));
+            //var tokenProvider = new Models.Services.AuthenticationService("issuer", "audience", "mykeyname");
+            //services.AddSingleton((Models.Repositories.IAuthenticationService)tokenProvider);
+
+            //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            //    .AddJwtBearer(options =>
+            //    {
+            //        options.RequireHttpsMetadata = false;
+            //        options.TokenValidationParameters = tokenProvider.GetValidationParameters();
+            //    });
+
+            // This is for the [Authorize] attributes.
+            services.AddAuthorization(auth =>
+            {
+                auth.DefaultPolicy = new AuthorizationPolicyBuilder()
+                    .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                    .RequireAuthenticatedUser()
+                    .Build();
+            });
 
             services.Configure<IISOptions>(options =>
             {
                 options.ForwardClientCertificate = false;
             });
-           
+
             services.AddHttpClient();
         }
 

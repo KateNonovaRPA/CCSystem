@@ -14,7 +14,7 @@ namespace Models.Contracts
 
         UserVM GetUserByUUID(Guid _UUID);
 
-        UserVM GetUserByIdentityID(Guid _identityID);
+        UserVM GetUserByAccessToken(string _accessToken);
 
         bool DeleteUser(Guid _UUID);
 

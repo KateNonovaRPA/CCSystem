@@ -23,9 +23,8 @@ namespace Models.Services
                               user => new UserVM()
                               {
                                   UUID = user.UUID.ToString(),
-                                  identityID = user.identityID.ToString(),
-                                  firstName = user.FirstName.ToString(),
-                                  lastName = user.LastName.ToString(),
+                                  fullName = user.FullName.ToString(),
+                                  type = user.Type.ToString(),
                                   email = user.Email.ToString(),
                                   createdAt = user.createdAt,
                                   updatedAt = user.updatedAt,
@@ -42,10 +41,10 @@ namespace Models.Services
             try
             {
                 _user.UUID = new Guid();
-                _user.identityID = Guid.Empty;
+                _user.AccessToken = _model.AccessToken;
                 _user.Email = _model.email;
-                _user.FirstName = _model.firstName;
-                _user.LastName = _model.lastName;
+                _user.FullName = _model.fullName;
+                _user.Type = _model.type;
                 _user.createdAt = _model.createdAt;
 
                 db.Users.Add(_user);
@@ -66,9 +65,9 @@ namespace Models.Services
                 User _user = new User();
 
                 _user.Email = _model.email;
-                _user.FirstName = _model.firstName;
-                _user.LastName = _model.lastName;
-                _user.identityID = Guid.Parse(_model.identityID);
+                _user.FullName = _model.fullName;
+                _user.Type = _model.type;
+                _user.AccessToken = _model.AccessToken;
 
                 try
                 {
@@ -98,10 +97,9 @@ namespace Models.Services
             if (user != null)
             {
                 _user.UUID = user.UUID.ToString();
-                _user.identityID = user.identityID.ToString();
                 _user.email = user.Email;
-                _user.firstName = user.FirstName;
-                _user.lastName = user.LastName;
+                _user.fullName = user.FullName;
+                _user.type = user.Type;
                 _user.createdAt = user.createdAt;
                 _user.updatedAt = user.updatedAt;
                 _user.deletedAt = user.deletedAt;
@@ -111,17 +109,16 @@ namespace Models.Services
         }
 
         //Get a user by ID
-        public UserVM GetUserByIdentityID(Guid _identityID)
+        public UserVM GetUserByAccessToken(string _accessToken)
         {
             UserVM _user = new UserVM();
-            User user = db.Users.Where(x => x.identityID == _identityID).FirstOrDefault();
+            User user = db.Users.Where(x => x.AccessToken == _accessToken).FirstOrDefault();
             if (user != null)
             {
                 _user.UUID = user.UUID.ToString();
-                _user.identityID = user.identityID.ToString();
                 _user.email = user.Email;
-                _user.firstName = user.FirstName;
-                _user.lastName = user.LastName;
+                _user.fullName = user.FullName;
+                _user.type = user.Type;
                 _user.createdAt = user.createdAt;
                 _user.updatedAt = user.updatedAt;
                 _user.deletedAt = user.deletedAt;

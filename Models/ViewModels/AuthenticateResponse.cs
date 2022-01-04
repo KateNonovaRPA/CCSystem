@@ -7,8 +7,7 @@ namespace Models.ViewModels
     public class AuthenticateResponse
     {
         public string Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
+        public string FullName { get; set; }
         public string Email { get; set; }
         public string Token { get; set; }
 
@@ -16,8 +15,7 @@ namespace Models.ViewModels
         public AuthenticateResponse(UserVM user, string token)
         {
             Id = user.UUID;
-            FirstName = user.firstName;
-            LastName = user.lastName;
+            FullName = user.fullName;
             Email = user.email;
             Token = token;
         }

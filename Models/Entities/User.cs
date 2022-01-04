@@ -10,13 +10,14 @@ namespace Models.Entities
         [Key]
         [Column("UUID")]
         public Guid UUID { get; set; }
+        [Required]
+        public Guid ClientID { get; set; }
 
-        public Guid identityID { get; set; }
+        public string AccessToken { get; set; }
 
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
+        public string FullName { get; set; }
+        public string Type { get; set; }
         public string Email { get; set; }
-        public string Password { get; set; }
 
         [DataType(DataType.DateTime)]
         public DateTime createdAt { get; set; }

@@ -10,6 +10,7 @@ using Models.ViewModels.LawsuitsData;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 
 namespace CourtsCheckSystem.Controllers
@@ -21,15 +22,17 @@ namespace CourtsCheckSystem.Controllers
         private readonly ILogger<LawsuitsController> logger;
         private readonly IAuthService authService;
         private readonly ILawsuitService lawsuitService;
+        private readonly IUserService userService;
 
-        public RobotController(ILogger<LawsuitsController> _logger, ILawsuitService _lawsuitService)
+        public RobotController(ILogger<LawsuitsController> _logger, ILawsuitService _lawsuitService, IAuthService _authService, IUserService _userService)
         {
             logger = _logger;
             lawsuitService = _lawsuitService;
+            authService = _authService;
+            userService = _userService;
         }
 
         // post data from the robot
-        [AllowAnonymous]
         [Microsoft.AspNetCore.Mvc.HttpPost]
         [Microsoft.AspNetCore.Mvc.Route("~/api/robot/lawsuitData")]
         public IActionResult lawsuitData([FromBody] RobotData robotData)
@@ -37,13 +40,16 @@ namespace CourtsCheckSystem.Controllers
             //user validation
             string accessToken = Request.Headers[HeaderNames.Authorization];
             if (String.IsNullOrEmpty(accessToken))
-            {
                 return Unauthorized("Missing header.");
-            }
-            if(robotData == null)
+            if (!authService.CheckAuthorization(accessToken, "robot"))
+                return Unauthorized();
+            if (robotData == null)
             {
                 return BadRequest("The data is not in the correct format.");
             }
+            UserVM currentUser = new UserVM();
+            currentUser = userService.GetUserByAccessToken(accessToken);
+
             ListWithDuplicates lawsuitDictiony = new ListWithDuplicates();
             string court = "";
             string lawsuitNumber = "";
@@ -52,6 +58,8 @@ namespace CourtsCheckSystem.Controllers
             {
                 if (robotData.justiceBgLawsuit != null)
                 {
+                    if (currentUser.fullName != "justiceBG")
+                        return Unauthorized();
                     court = robotData.justiceBgLawsuit.court;
                     lawsuitNumber = robotData.justiceBgLawsuit.case_number;
                     lawsuitEntryNumber = robotData.justiceBgLawsuit.case_entry_number;
@@ -80,6 +88,8 @@ namespace CourtsCheckSystem.Controllers
                 else if (robotData.VKSLawsuit !=null)
                 {
                     court = "Върховен касационен съд";
+                    if (currentUser.fullName != court)
+                        return Unauthorized();
                     lawsuitNumber = robotData.VKSLawsuit.case_number;
                     lawsuitEntryNumber = robotData.VKSLawsuit.case_entry_number;
                     if (robotData.VKSLawsuit.session_details.Count > 0)
@@ -114,6 +124,8 @@ namespace CourtsCheckSystem.Controllers
                 else if (robotData.SRSLawsuit !=null)
                 {
                     court = "Софийски районен съд";
+                    if (currentUser.fullName != court)
+                        return Unauthorized();
                     lawsuitNumber = robotData.SRSLawsuit.case_number;
                     lawsuitEntryNumber = robotData.SRSLawsuit.case_entry;
                     if (robotData.SRSLawsuit.case_acts.Count > 0)
@@ -185,7 +197,6 @@ namespace CourtsCheckSystem.Controllers
         //    return HttpStatusCode.OK;
         //}
 
-        [AllowAnonymous]
         [Microsoft.AspNetCore.Mvc.HttpGet]
         [Microsoft.AspNetCore.Mvc.Route("~/api/robot/lawsuitsForChecking")]
         public IActionResult lawsuitsForChecking()
@@ -193,16 +204,13 @@ namespace CourtsCheckSystem.Controllers
             //authorization
             string accessToken = Request.Headers[HeaderNames.Authorization];
             if (String.IsNullOrEmpty(accessToken))
-            {
-                return Unauthorized("Missing header");
-            }
-            //WARN: to delete userID
-            Guid robotID = new Guid("71967346-b744-469b-b8d7-159530990028");
-            string robotName = "justiceBG";
-            robotName = "Върховен касационен съд";
-            string result = lawsuitService.GetActiveLawsuitsListByRobot(robotName);
-            //string result = lawsuitService.GetActiveLawsuitsListByRobot(userID);
-            return Ok(result);
+                return Unauthorized("Missing header.");
+            if (!authService.CheckAuthorization(accessToken, "robot"))
+                return Unauthorized();
+
+            UserVM currentUser = userService.GetUserByAccessToken(accessToken);
+            IQueryable<UserLawsuitDataVM> test = lawsuitService.GetActiveLawsuitsListByRobot(currentUser.fullName);
+            return Ok(test);
         }
     }
 }
