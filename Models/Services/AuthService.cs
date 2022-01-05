@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Models.Context;
 using Models.Contracts;
@@ -15,6 +16,7 @@ namespace Models.Services
     {
         private readonly string tokenKey;
         private DbContextOptions<MainContext> _dbContextOptions;
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public AuthService(string _tokenKey, DbContextOptions<MainContext> dbContextOptions)
         {
@@ -96,8 +98,7 @@ namespace Models.Services
                             {
                                 currentUser.AccessToken = newAccessToken;
                             }
-                            currentUser.FullName = user.fullName;
-                            currentUser.Type = user.type;
+                            currentUser.FullName = user.fullName;                            
                             currentUser.Email = user.email;
                             currentUser.updatedAt = DateTime.Now;
                             db.Users.Update(currentUser);
@@ -108,7 +109,7 @@ namespace Models.Services
                         {
                             _user.Email = user.email;
                             _user.FullName = user.fullName;
-                            _user.Type = user.type;
+                            _user.Type = (String.IsNullOrEmpty(user.type)) ? "user" : user.type;
                             _user.createdAt = DateTime.Now;
                             _user.ClientID =  Guid.Parse(user.clientID);
                             _user.AccessToken = newAccessToken;
@@ -120,10 +121,11 @@ namespace Models.Services
                 }
                 catch (Exception ex)
                 {
-                    return "";
+                    log.Error(ex.Message);
+                    return "An error occurred";
                 }
             }
-            return "Missing data";
+            return null;
         }
 
         public bool DeAuthorizeUser(string clientID)

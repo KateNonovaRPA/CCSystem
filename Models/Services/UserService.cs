@@ -10,6 +10,7 @@ namespace Models.Services
 {
     public class UserService : BaseService, IUserService
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public UserService(MainContext context)
         {
             this.db = context;
@@ -53,6 +54,7 @@ namespace Models.Services
             }
             catch (Exception ex)
             {
+                log.Error(ex.Message);
                 return false;
             }
         }
@@ -83,6 +85,7 @@ namespace Models.Services
                 }
                 catch (Exception ex)
                 {
+                    log.Error(ex.Message);
                     return false;
                 }
             }
@@ -108,7 +111,7 @@ namespace Models.Services
             return _user;
         }
 
-        //Get a user by ID
+        //Get a user by AccessToken
         public UserVM GetUserByAccessToken(string _accessToken)
         {
             UserVM _user = new UserVM();
@@ -140,6 +143,7 @@ namespace Models.Services
             }
             catch (Exception ex)
             {
+                log.Error(ex.Message);
                 return false;
             }
         }
@@ -156,6 +160,7 @@ namespace Models.Services
             }
             catch (Exception ex)
             {
+                log.Error(ex.Message);
                 return false;
             }
         }

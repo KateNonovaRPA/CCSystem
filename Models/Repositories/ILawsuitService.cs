@@ -19,9 +19,9 @@ namespace Models.Contracts
         LawsuitVM GetLawsuitByNumber(string lawsuitNumber);
         LawsuitVM GetLawsuitByEntryNumber(string lawsuitEntryNumber);
         List<LawsuitVM> GetLawsuitsByUser(Guid userID);
-        void AddCity(string city, string court, string both);
+        
         void AddLawsuitType(string type);
-        string GetChangedLawsuitsListByUserID(Guid userID);
-        //void UploadData();
+        List<ChangedLawsuitData> GetChangedLawsuitsListByUserID(Guid userID);
+
     }
 }

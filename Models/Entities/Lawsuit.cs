@@ -26,6 +26,8 @@ namespace Models.Entities
 
         [Column("courtID", TypeName = "int")]
         public int courtID { get; set; }
+        [Required]
+        public string year { get; set; }
 
         [ForeignKey("courtID")]
         public Court Court { get; set; }

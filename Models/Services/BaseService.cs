@@ -1,7 +1,5 @@
-﻿using Common.Services;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Models.Context;
-using Models.Entities;
 using System;
 using System.Data;
 using System.Data.OleDb;
@@ -14,7 +12,7 @@ namespace Models.Services
     public abstract class BaseService
     {
         protected MainContext db;
-
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public DbSet<T> All<T>() where T : class
         {
             return db.Set<T>();
@@ -34,8 +32,9 @@ namespace Models.Services
                 setOfT.RemoveRange(forDelete);
                 return true;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                log.Error(ex.Message);
                 return false;
             }
         }
@@ -44,48 +43,6 @@ namespace Models.Services
         {
             return db.Set<T>().Find(id);
         }
-        public void AddCity(string city, string court, string fullCourtName)
-        {
-
-            City newCity = new City();
-            newCity = db.Cities.Where(c => c.name == city).FirstOrDefault();
-            if (newCity == null)
-            {
-                if (city != "")
-                {
-                    newCity = new City();
-                    newCity.name = city;
-                    db.Add(newCity);
-                    db.SaveChanges();
-                }
-            }
-            Court newCourt = new Court()
-            {
-                fullName = fullCourtName,
-                name = court,
-                createdAt = DateTime.Now,
-            };
-            if (newCity !=  null && newCity.ID != 0)
-            {
-                newCourt.cityId = newCity.ID;
-                newCourt.createdAt = DateTime.Now;
-            }
-            db.Add(newCourt);
-            db.SaveChanges();
-        }
-        public void AddLawsuitType(string type)
-        {
-            LawsuitTypeDictionary lawsuitType = new LawsuitTypeDictionary();
-            lawsuitType = db.LawsuitTypeDictionary.Where(l => l.name == type).FirstOrDefault();
-            if (lawsuitType == null)
-            {
-                lawsuitType = new LawsuitTypeDictionary();
-                lawsuitType.name = type;
-                db.LawsuitTypeDictionary.Add(lawsuitType);
-                db.SaveChanges();
-            }
-        }
-
 
         public static string[] SplitString(string data)
         {

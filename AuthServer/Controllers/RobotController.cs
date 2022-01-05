@@ -1,6 +1,4 @@
 ﻿using Common.Helpers;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
@@ -11,7 +9,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 
 namespace CourtsCheckSystem.Controllers
 {
@@ -32,7 +29,11 @@ namespace CourtsCheckSystem.Controllers
             userService = _userService;
         }
 
-        // post data from the robot
+        /// <summary>
+        /// Receive data from the robots
+        /// </summary>
+        /// <param name="robotData"></param>
+        /// <returns> Status code </returns>
         [Microsoft.AspNetCore.Mvc.HttpPost]
         [Microsoft.AspNetCore.Mvc.Route("~/api/robot/lawsuitData")]
         public IActionResult lawsuitData([FromBody] RobotData robotData)
@@ -163,40 +164,9 @@ namespace CourtsCheckSystem.Controllers
             }
         }
 
-        //[AllowAnonymous]
-        //[Microsoft.AspNetCore.Mvc.HttpPost]
-        //[Microsoft.AspNetCore.Mvc.Route("~/api/userLawsuits")]
-        //public HttpStatusCode userLawsuits([FromBody] UserLawsuitsDataVM lawsuits)
-        //{
-        //    //user authorization
-        //    Guid userID = new Guid("71967346-b744-469b-b8d7-159530990028");
-
-        //    try
-        //    {
-        //        if (lawsuits !=null)
-        //        {
-        //            //Inactive all user's lawsuits
-        //            lawsuitService.InactivateAllUserLawsuits(userID);
-        //            foreach (UserLawsuitDataVM currentLawsuit in lawsuits.cases)
-        //            {
-        //                //GetLawsuitID
-        //                LawsuitVM lawsuitVM = lawsuitService.GetLawsuitByEntryNumber(currentLawsuit.case_entry_number);
-        //                if (lawsuitVM.ID == 0)
-        //                    lawsuitVM = lawsuitService.CreateLawsuit(currentLawsuit);
-        //                //Make the lawsuit active for the current userme
-        //                lawsuitService.ActivateLawsuit(userID, lawsuitVM.ID);
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        logger.LogError("User Lawsuits:", ex);
-        //        return HttpStatusCode.BadRequest;
-        //    }
-
-        //    return HttpStatusCode.OK;
-        //}
-
+        /// <summary>
+        /// Return data that have to be checked from the robot
+        /// </summary>
         [Microsoft.AspNetCore.Mvc.HttpGet]
         [Microsoft.AspNetCore.Mvc.Route("~/api/robot/lawsuitsForChecking")]
         public IActionResult lawsuitsForChecking()
@@ -204,13 +174,20 @@ namespace CourtsCheckSystem.Controllers
             //authorization
             string accessToken = Request.Headers[HeaderNames.Authorization];
             if (String.IsNullOrEmpty(accessToken))
-                return Unauthorized("Missing header.");
+                return Unauthorized("Missing header");
             if (!authService.CheckAuthorization(accessToken, "robot"))
                 return Unauthorized();
-
-            UserVM currentUser = userService.GetUserByAccessToken(accessToken);
-            IQueryable<UserLawsuitDataVM> test = lawsuitService.GetActiveLawsuitsListByRobot(currentUser.fullName);
-            return Ok(test);
+            try
+            {
+                UserVM currentUser = userService.GetUserByAccessToken(accessToken);
+                IQueryable<UserLawsuitDataVM> test = lawsuitService.GetActiveLawsuitsListByRobot(currentUser.fullName);
+                return Ok(test);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Get lawsuits list", ex);
+                return BadRequest();
+            }
         }
     }
 }

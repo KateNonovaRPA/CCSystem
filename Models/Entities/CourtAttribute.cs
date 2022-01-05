@@ -12,11 +12,9 @@ namespace Models.Entities
         [Key]
         [Column(TypeName = "int")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int ID { get; set; }        
+        public int ID { get; set; }
         public string attributeName { get; set; }
-
         [Column("courtID", TypeName = "int")]
-        public int parentID { get; set; }
         public int courtID { get; set; }
 
         [ForeignKey("courtID")]

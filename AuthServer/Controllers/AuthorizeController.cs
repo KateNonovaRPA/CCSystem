@@ -1,13 +1,9 @@
-﻿using Common.Helpers;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Models.Contracts;
-using Models.Repositories;
 using Models.ViewModels;
-using System;
 using System.Diagnostics;
-using System.Text.Json;
 
 namespace CourtsCheckSystem.Controllers
 {
@@ -30,61 +26,67 @@ namespace CourtsCheckSystem.Controllers
         public IActionResult Authenticate([FromBody] UserVM user)
         {
             string token = authService.AuthorizeUser(user);
-
             if (token == null)
-                return Unauthorized();
-
-            return Ok(token);
-        }
-
-
-        public JsonWebToken Get([FromQuery] string grant_type, [FromQuery] string username, [FromQuery] string password, [FromQuery] string refresh_token)
-        {
-            // Authenticate depending on the grant type.
-            UserVM user = grant_type == "refresh_token" ? GetUserByToken(refresh_token) : GetUserByCredentials(username, password);
-
-            if (user == null)
-                throw new UnauthorizedAccessException("No!");
-
-            int ageInMinutes = 20;  // However long you want...
-
-            DateTime expiry = DateTime.UtcNow.AddMinutes(ageInMinutes);
-
-            var token = new JsonWebToken
             {
-                access_token = authService.AuthorizeUser(user),
-                expires_in   = ageInMinutes * 60
-            };
-
-            if (grant_type != "refresh_token")
-                token.refresh_token = GenerateRefreshToken(user);
-
-            return token;
+                return Unauthorized();
+            }
+            else if (token == "An error occurred")
+            {
+                return BadRequest();
+            }
+            else
+            {
+                return Ok(token);
+            }
         }
 
-        private UserVM GetUserByToken(string refreshToken)
-        {
-            // TODO: Check token against your database.
-            if (refreshToken == "test")
-                return new UserVM { email = "test" };
+        //public JsonWebToken Get([FromQuery] string grant_type, [FromQuery] string username, [FromQuery] string password, [FromQuery] string refresh_token)
+        //{
+        //    // Authenticate depending on the grant type.
+        //    UserVM user = grant_type == "refresh_token" ? GetUserByToken(refresh_token) : GetUserByCredentials(username, password);
 
-            return null;
-        }
+        //    if (user == null)
+        //        throw new UnauthorizedAccessException("No!");
 
-        private UserVM GetUserByCredentials(string username, string password)
-        {
-            // TODO: Check username/password against your database.
-            if (username == password)
-                return new UserVM { email = username };
+        //    int ageInMinutes = 20;  // However long you want...
 
-            return null;
-        }
+        //    DateTime expiry = DateTime.UtcNow.AddMinutes(ageInMinutes);
 
-        private string GenerateRefreshToken(UserVM user)
-        {
-            // TODO: Create and persist a refresh token.
-            return "test";
-        }
+        //    var token = new JsonWebToken
+        //    {
+        //        access_token = authService.AuthorizeUser(user),
+        //        expires_in   = ageInMinutes * 60
+        //    };
+
+        //    if (grant_type != "refresh_token")
+        //        token.refresh_token = GenerateRefreshToken(user);
+
+        //    return token;
+        //}
+
+        //private UserVM GetUserByToken(string refreshToken)
+        //{
+        //    // TODO: Check token against your database.
+        //    if (refreshToken == "test")
+        //        return new UserVM { email = "test" };
+
+        //    return null;
+        //}
+
+        //private UserVM GetUserByCredentials(string username, string password)
+        //{
+        //    // TODO: Check username/password against your database.
+        //    if (username == password)
+        //        return new UserVM { email = username };
+
+        //    return null;
+        //}
+
+        //private string GenerateRefreshToken(UserVM user)
+        //{
+        //    // TODO: Create and persist a refresh token.
+        //    return "test";
+        //}
 
         //// POST: api/Authorize/GetAuthorization
         //[AllowAnonymous]
