@@ -276,6 +276,8 @@ namespace Models.Services
                 {
                     LawsuitType type = new LawsuitType();
                     string lawsuitType = (newLawsuitData.Where(e => e.Key == "case_type").FirstOrDefault().Value);
+                    string year = (newLawsuitData.Where(e => e.Key == "case_year").FirstOrDefault().Value);
+                    year = (String.IsNullOrEmpty(year)) ? (newLawsuitData.Where(e => e.Key == "year").FirstOrDefault().Value) : year;
                     type = db.LawsuitTypes.Where(l => l.name ==lawsuitType).FirstOrDefault();
                     if (type == null)
                     {
@@ -292,7 +294,8 @@ namespace Models.Services
                         Court = court,
                         createdAt = DateTime.Now,
                         typeID = type.ID,
-                        Type = type
+                        Type = type,
+                        year = year,
                     };
                     db.Lawsuits.Add(lawsuit);
                     db.SaveChanges();
