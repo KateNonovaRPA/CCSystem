@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Models.Contracts;
+using Models.Contracts; 
 
 namespace CourtsCheckSystem.Controllers
 {

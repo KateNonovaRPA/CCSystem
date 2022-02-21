@@ -14,6 +14,7 @@ namespace Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ID { get; set; }
         public string attributeName { get; set; }
+
         [Column("courtID", TypeName = "int")]
         public int courtID { get; set; }
 

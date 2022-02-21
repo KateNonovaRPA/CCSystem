@@ -12,6 +12,7 @@ namespace Models.Entities
         public Guid UUID { get; set; }
         [Required]
         public Guid ClientID { get; set; }
+        public string ClientSecret { get; set; }
 
         public string AccessToken { get; set; }
 

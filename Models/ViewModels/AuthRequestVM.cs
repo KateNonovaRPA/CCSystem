@@ -5,12 +5,12 @@ namespace Models.ViewModels
     public class AuthRequestVM
     {
         public UserVM user { get; set; }
-        public string GUIDCode { get; set; }
+        public string APIKey { get; set; }
+        public string ClientID { get; set; }
     }
 
-    public class encAuthRequestVM
-    {
-        public Guid ReqID { get; set; }
-        public string Request { get; set; }
+    public class resAuthRequestVM
+    {      
+        public string ClientSecret { get; set; }
     }
 }

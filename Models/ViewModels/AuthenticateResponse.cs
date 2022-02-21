@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Models.ViewModels
+﻿namespace Models.ViewModels
 {
     public class AuthenticateResponse
     {
@@ -10,7 +6,6 @@ namespace Models.ViewModels
         public string FullName { get; set; }
         public string Email { get; set; }
         public string Token { get; set; }
-
 
         public AuthenticateResponse(UserVM user, string token)
         {

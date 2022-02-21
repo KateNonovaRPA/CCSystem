@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Net.Http.Headers;
 using Models.Contracts;
 using Models.ViewModels;
 using System.Diagnostics;
@@ -40,84 +41,69 @@ namespace CourtsCheckSystem.Controllers
             }
         }
 
-        //public JsonWebToken Get([FromQuery] string grant_type, [FromQuery] string username, [FromQuery] string password, [FromQuery] string refresh_token)
-        //{
-        //    // Authenticate depending on the grant type.
-        //    UserVM user = grant_type == "refresh_token" ? GetUserByToken(refresh_token) : GetUserByCredentials(username, password);
+        [AllowAnonymous]
+        [HttpPost("authenticate")]
+        [Microsoft.AspNetCore.Mvc.Route("~/api/auth")]
+        public IActionResult Auth([FromBody] AuthRequestVM auth)
+        {
+            resAuthRequestVM clientSecret = new resAuthRequestVM();
+            if (auth.ClientID == null || auth.APIKey == null || auth.user == null)
+            {
+                return BadRequest(clientSecret);
+            }
+            else
+            {
+                if (authService.ValidateAPIKey(auth.APIKey))
+                {
+                    resAuthRequestVM newAuthCode = authService.AuthCode(auth);
+                    if (newAuthCode != null)
+                        return Ok(newAuthCode);
+                    else
+                        return Unauthorized(new APIErrorVM() { error ="Unauthorized Access" });
+                }
+                else
+                {
+                    return Unauthorized(new APIErrorVM() { error ="Wrong API key" });
+                }
+            }
+        }
 
-        //    if (user == null)
-        //        throw new UnauthorizedAccessException("No!");
+        [AllowAnonymous]
+        [HttpPost("authenticate")]
+        [Microsoft.AspNetCore.Mvc.Route("~/api/auth/token")]
+        public IActionResult AuthToken()
+        {
+            //WARN: Test
+            //string testAuthCode = Base64Encode("49333AC5-03C9-4517-927F-197B729F3E32" + ":" + "579dd594-fc30-4c29-a4a1-e88b51e17a26");
 
-        //    int ageInMinutes = 20;  // However long you want...
-
-        //    DateTime expiry = DateTime.UtcNow.AddMinutes(ageInMinutes);
-
-        //    var token = new JsonWebToken
-        //    {
-        //        access_token = authService.AuthorizeUser(user),
-        //        expires_in   = ageInMinutes * 60
-        //    };
-
-        //    if (grant_type != "refresh_token")
-        //        token.refresh_token = GenerateRefreshToken(user);
-
-        //    return token;
-        //}
-
-        //private UserVM GetUserByToken(string refreshToken)
-        //{
-        //    // TODO: Check token against your database.
-        //    if (refreshToken == "test")
-        //        return new UserVM { email = "test" };
-
-        //    return null;
-        //}
-
-        //private UserVM GetUserByCredentials(string username, string password)
-        //{
-        //    // TODO: Check username/password against your database.
-        //    if (username == password)
-        //        return new UserVM { email = username };
-
-        //    return null;
-        //}
-
-        //private string GenerateRefreshToken(UserVM user)
-        //{
-        //    // TODO: Create and persist a refresh token.
-        //    return "test";
-        //}
-
-        //// POST: api/Authorize/GetAuthorization
-        //[AllowAnonymous]
-        //[HttpPost]
-        //[Route("[action]")]
-        //[Route("api/Authorize/GetAuthorization")]
-        //public ActionResult<string> GetAuthorization([FromBody] encAuthRequestVM _encRequest)
-        //{
-        //    string decryptedRequest = EncriptionHelper.Decrypt(_encRequest.Request, _encRequest.ReqID.ToString());
-        //    string decodedRequest = Base64UrlEncoder.Encoder.Decode(decryptedRequest);
-
-        //    AuthRequestVM authRequest = JsonSerializer.Deserialize<AuthRequestVM>(decryptedRequest);
-
-        //    //TODO: Use service that authorize the request!
-
-        //    AuthResponseVM myRespose = new AuthResponseVM();
-        //    myRespose.GUIDCode = authRequest.GUIDCode;
-        //    myRespose.Status = authService.CheckAuthorization(authRequest.user.clientID);
-
-        //    //Prepare response:
-        //    string responceJson = JsonSerializer.Serialize(myRespose);
-        //    string encodedResponse = Base64UrlEncoder.Encoder.Encode(responceJson);
-        //    string encryptedResponse = EncriptionHelper.Encrypt(encodedResponse, _encRequest.ReqID.ToString());
-
-        //    return CreatedAtAction("GetAuthorization", new { Timestamp = DateTime.UtcNow.ToString() }, encryptedResponse);
-        //}
+            string authorizationCode = Request.Headers[HeaderNames.Authorization];
+            if (!authorizationCode.Contains("Bearer"))
+            {
+                return BadRequest(new APIErrorVM() { error ="Wrong authorization type" });
+            }
+            else
+            {
+                resTokenVM accessToken = authService.GetAccessToken(authorizationCode.Replace("Bearer ", ""));
+                if (accessToken != null)
+                {
+                    return Ok(accessToken);
+                }
+                else
+                    return Unauthorized(new APIErrorVM() { error ="Unauthorized Access" });
+            }
+        }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorVM { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+        //WARN: for test
+        //public static string Base64Encode(string plainText)
+        //{
+        //    var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+        //    return System.Convert.ToBase64String(plainTextBytes);
+        //}
     }
 }

@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using Models.Context;
 using Models.Contracts;
 using Models.Services;
+using Models.ViewModels;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
@@ -47,13 +48,19 @@ namespace AuthServer
             });
 
             string tmp = Configuration.GetConnectionString("MainDB");
-            var tokenKey = Configuration.GetValue<string>("TokenKey");
-            var key = Encoding.ASCII.GetBytes(tokenKey);
+            var APIKey = Configuration.GetValue<string>("APIKey");
+            var key = Encoding.ASCII.GetBytes(APIKey);
+
+            var emailConfig = Configuration
+            .GetSection("EmailConfiguration")
+            .Get<EmailConfiguration>();
+            services.AddSingleton(emailConfig);
+            services.AddControllers();
 
             services.ConfigureDI();
             // services.AddSingleton<IAuthService>(new AuthService(tokenKey));
             //services.AddScoped<IAuthService>(_ => new AuthService(tokenKey));
-            services.AddSingleton<IAuthService>(new AuthService(tokenKey, optionsBuilder.Options));
+            services.AddSingleton<IAuthService>(new AuthService(APIKey, optionsBuilder.Options));
             services.AddSignalR();
 
             // Url Helper configured for injection

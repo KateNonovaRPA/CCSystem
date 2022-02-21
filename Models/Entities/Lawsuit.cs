@@ -15,7 +15,6 @@ namespace Models.Entities
 
         public string? lawsuitNumber { get; set; }
 
-        [Required]
         public string lawsuitEntryNumber { get; set; }
 
         [Column("typeID", TypeName = "int")]

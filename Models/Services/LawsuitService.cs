@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MailKit.Net.Smtp;
+using MailKit.Security;
+using Microsoft.EntityFrameworkCore;
+using MimeKit;
 using Models.Context;
 using Models.Contracts;
 using Models.Entities;
@@ -13,10 +16,12 @@ namespace Models.Services
     public class LawsuitService : BaseService, ILawsuitService
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly EmailConfiguration _emailConfig;
 
-        public LawsuitService(MainContext context)
+        public LawsuitService(MainContext context, EmailConfiguration emailConfig)
         {
             db = context;
+            _emailConfig = emailConfig;
         }
 
         public IQueryable<LawsuitVM> GetActiveLawsuitsListByCourtID(int courtID)
@@ -25,6 +30,7 @@ namespace Models.Services
                 Select(lawsuit => new LawsuitVM()
                 {
                     lawsuitEntryNumber = lawsuit.u.lawsuitEntryNumber,
+                    lawsuitNumber = lawsuit.u.lawsuitNumber,
                     typeId = lawsuit.u.typeID,
                     courtID = lawsuit.u.courtID,
                 });
@@ -40,7 +46,8 @@ namespace Models.Services
             {
                 lawsuits = db.UserLawsuits.Where(x => x.active == true).Select(lawsuit => new UserLawsuitDataVM()
                 {
-                    case_entry_number = lawsuit.Lawsuit.lawsuitEntryNumber.ToString(),
+                    case_entry_number = (lawsuit.Lawsuit.lawsuitEntryNumber != null) ? lawsuit.Lawsuit.lawsuitEntryNumber.ToString() : "",
+                    case_number =  (lawsuit.Lawsuit.lawsuitNumber != null) ? lawsuit.Lawsuit.lawsuitNumber.ToString() : "",
                     type= lawsuit.Lawsuit.Type.name,
                     court =  lawsuit.Lawsuit.Court.fullName,
                     city = (lawsuit.Lawsuit.Court.City != null) ? lawsuit.Lawsuit.Court.City.name : "",
@@ -52,6 +59,7 @@ namespace Models.Services
                 lawsuits = db.UserLawsuits.Where(x => x.active == true && x.Lawsuit.Court.name == robotName).Select(lawsuit => new UserLawsuitDataVM()
                 {
                     case_entry_number = lawsuit.Lawsuit.lawsuitEntryNumber.ToString(),
+                    case_number =  (lawsuit.Lawsuit.lawsuitNumber != null) ? lawsuit.Lawsuit.lawsuitNumber.ToString() : "",
                     type= lawsuit.Lawsuit.Type.name,
                     court =  lawsuit.Lawsuit.Court.fullName,
                     city = "",
@@ -62,10 +70,11 @@ namespace Models.Services
             {
                 lawsuits = db.UserLawsuits.Where(x => x.active == true && x.Lawsuit.Court.name == robotName).Select(lawsuit => new UserLawsuitDataVM()
                 {
-                    case_entry_number = lawsuit.Lawsuit.lawsuitEntryNumber.ToString(),
+                    case_entry_number = (lawsuit.Lawsuit.lawsuitEntryNumber != null) ? lawsuit.Lawsuit.lawsuitEntryNumber.ToString() : "",
+                    case_number = (lawsuit.Lawsuit.lawsuitNumber != null) ? lawsuit.Lawsuit.lawsuitNumber.ToString() : "",
                     type= lawsuit.Lawsuit.Type.name,
                     court =  lawsuit.Lawsuit.Court.fullName,
-                    city = (lawsuit.Lawsuit.Court.City != null) ? lawsuit.Lawsuit.Court.City.name : "",
+                    city = "София",
                     year = lawsuit.Lawsuit.year,
                 });
             }
@@ -190,9 +199,10 @@ namespace Models.Services
                     db.Courts.Add(court);
                     db.SaveChanges();
                 }
-                if(_model.case_number != null)
+                if (_model.case_number != null)
                     lawsuit.lawsuitNumber = _model.case_number;
-                lawsuit.lawsuitEntryNumber = _model.case_entry_number;
+                if (_model.case_entry_number != null)
+                    lawsuit.lawsuitEntryNumber = _model.case_entry_number;
                 lawsuit.year = String.IsNullOrEmpty(_model.year) ? DateTime.Now.Year.ToString() : _model.year;
                 lawsuit.typeID = lawsuitType.ID;
                 lawsuit.courtID = court.ID;
@@ -323,6 +333,27 @@ namespace Models.Services
                     if ((lastLawsuitDataList.Count != newLawsuitData.Count || !lastLawsuitDictionary.SequenceEqual(newLawsuitData)) && newLawsuitData.Count>0)
                     {
                         CreateLawsuitData(court.ID, lawsuit.ID, newLawsuitData, lastChangeNumber);
+
+                        var rng = new Random();
+                        List<string> stakeholders = new List<string>();
+                        List<UserLawsuit> usersLawsuits = db.UserLawsuits.Include(a => a.User).Where(u => u.lawsuitID == lawsuit.ID && u.active == true).ToList();
+                        foreach (UserLawsuit usersLawsuit in usersLawsuits)
+                            stakeholders.Add(usersLawsuit.User.Email);
+                        if (stakeholders != null)
+                        {
+                            string messageContent = "Настъпиха промени в дело ";
+                            if (!String.IsNullOrEmpty(lawsuit.lawsuitEntryNumber))
+                                messageContent += "с вх. номер " + lawsuit.lawsuitEntryNumber;
+                            else if (!String.IsNullOrEmpty(lawsuit.lawsuitNumber))
+                                messageContent += "с номер " + lawsuit.lawsuitNumber;
+                            messageContent += " в " + lawsuit.Court.fullName;
+                            //if (lawsuit.Court.City != null && !String.IsNullOrEmpty(lawsuit.Court.City.name))
+                            //    messageContent += ", град" + lawsuit.Court.City.name;
+
+
+                            MessageRequest message = new MessageRequest(stakeholders.AsEnumerable(), "Настъпили промени в дело", messageContent);
+                            SendEmail(message);
+                        }
                     }
                     if (String.IsNullOrEmpty(lawsuit.lawsuitNumber) && !String.IsNullOrEmpty(lawsuitNumber))
                     {
@@ -471,19 +502,45 @@ namespace Models.Services
             return lawsuitVM;
         }
 
-        //private static Dictionary<string, string> ParseObjectToDictionary(object obj)
-        //{
-        //    string json = JsonConvert.SerializeObject(obj);
-        //    var dictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-        //    return dictionary;
-        //}
+        public void SendEmail(MessageRequest message)
+        {
+            var emailMessage = CreateEmailMessage(message);
+            Send(emailMessage);
+        }
 
-        //private static Dictionary<string, string> ParseJsonToDictionary(string json)
-        //{
-        //    //string json = JsonConvert.SerializeObject(obj);
-        //    var dictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-        //    return dictionary;
-        //}
+        private MimeMessage CreateEmailMessage(MessageRequest message)
+        {
+            var emailMessage = new MimeMessage();
+            emailMessage.From.Add(new MailboxAddress(_emailConfig.From));
+            emailMessage.To.AddRange(message.To);
+            emailMessage.Subject = message.Subject;
+            emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Text) { Text = message.Content };
+            emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Html) { Text = string.Format("<h3>{0}</h3>", message.Content) };
+            return emailMessage;
+        }
+
+        private void Send(MimeMessage mailMessage)
+        {
+            using (var client = new SmtpClient())
+            {
+                try
+                {
+                    client.Connect("smtp-mail.outlook.com", 587, SecureSocketOptions.StartTls);
+                    client.Authenticate(_emailConfig.UserName, _emailConfig.Password);
+                    client.Send(mailMessage);
+                }
+                catch
+                {
+                    //log an error message or throw an exception or both.
+                    throw;
+                }
+                finally
+                {
+                    client.Disconnect(true);
+                    client.Dispose();
+                }
+            }
+        }
 
         public void AddLawsuitType(string type)
         {

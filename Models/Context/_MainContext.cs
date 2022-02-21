@@ -43,10 +43,10 @@ namespace Models.Context
 
             modelBuilder.Entity<User>()
             .HasData(
-
-           //WARN: only for test
-           new User { UUID = new System.Guid("71967346-b744-469b-b8d7-159530990028"), FullName="test" });
-
+                new User { UUID = new System.Guid("114f0249-effd-45fb-fdaf-08d9dfe8b8ae"), FullName="Върховен касационен съд", ClientID=Guid.Parse("8af1bcbf-f10e-4cc0-88da-4ec81da7ee95"), ClientSecret="7572f72f-3ec4-466f-ac3a-b2f7f19f13c4", AccessToken= "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE2NDEyOTYzNDEsImV4cCI6MzIxOTEzMzE0MSwiaWF0IjoxNjQxMjk2MzQxfQ.vfzrTvXJxPMJlgERvBB8ZJAoYsXoDBnQCLnIWbnh_mA", createdAt=DateTime.Now, Type="robot" },
+                new User { UUID = new System.Guid("dea1a827-a355-4c8a-fdb0-08d9dfe8b8ae"), FullName="Софийски районен съд", ClientID=Guid.Parse("253c12aa-8fbe-4036-8ac0-ede4f69fa215"), ClientSecret="dd44d976-dc58-4472-a7e4-aa07e4f1874a", AccessToken= "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE2NDEyOTYzNjcsImV4cCI6MzIxOTEzMzE2NywiaWF0IjoxNjQxMjk2MzY3fQ.MNqujdRSkbH9tHS5U5mmO0pJzVobnsfIzOTM5XOrJqw", createdAt=DateTime.Now, Type="robot" },
+                new User { UUID = new System.Guid("39d2b5c4-3d64-4bdd-fdb1-08d9dfe8b8ae"), FullName="justiceBG", ClientID=Guid.Parse("2cf70dc5-5e2e-4580-9e0b-e52eb88ac1ae"), ClientSecret="2bc3eac4-cf99-4d8f-b549-1b1c82cf9ac1", AccessToken= "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE2NDEyOTYzODcsImV4cCI6MzIxOTEzMzE4NywiaWF0IjoxNjQxMjk2Mzg3fQ.6HtapfkWYwi4I0cxQgIdK9mCMd2qJswGMgpR8MaO61g", createdAt=DateTime.Now, Type="robot" }
+            );
             modelBuilder.Entity<LawsuitTypeDictionary>().HasData(
                 new LawsuitTypeDictionary { ID = 1, name = "Административно дело" },
                 new LawsuitTypeDictionary { ID = 2, name = "Брачно дело" },

@@ -7,6 +7,7 @@ using Models.Contracts;
 using Models.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CourtsCheckSystem.Controllers
 {
@@ -38,12 +39,14 @@ namespace CourtsCheckSystem.Controllers
             //user authorization
             string accessToken = Request.Headers[HeaderNames.Authorization];
             if (String.IsNullOrEmpty(accessToken))
-                return Unauthorized("Missing header.");
+                return Unauthorized(new APIErrorVM() { error ="Missing header" });
+            if (!accessToken.Contains("Bearer ")) 
+                return BadRequest(new APIErrorVM() { error ="Wrong authorization type" });
+            accessToken = accessToken.Replace("Bearer ", "");
             if (!authService.CheckAuthorization(accessToken, "user"))
-                return Unauthorized();
+                return Unauthorized(new APIErrorVM() { error ="Unauthorized Access" });
 
             UserVM currentUser = userService.GetUserByAccessToken(accessToken);
-            //Guid userID = new Guid("71967346-b744-469b-b8d7-159530990028");
             try
             {
                 if (lawsuits !=null)
@@ -52,8 +55,12 @@ namespace CourtsCheckSystem.Controllers
                     lawsuitService.InactivateAllUserLawsuits(Guid.Parse(currentUser.UUID));
                     foreach (UserLawsuitDataVM currentLawsuit in lawsuits.cases)
                     {
+                        LawsuitVM lawsuitVM = new LawsuitVM();
                         //GetLawsuitID
-                        LawsuitVM lawsuitVM = lawsuitService.GetLawsuitByEntryNumber(currentLawsuit.case_entry_number);
+                        if (!String.IsNullOrEmpty(currentLawsuit.case_entry_number))
+                            lawsuitVM = lawsuitService.GetLawsuitByEntryNumber(currentLawsuit.case_entry_number);
+                        if (!String.IsNullOrEmpty(currentLawsuit.case_number))
+                            lawsuitVM = lawsuitService.GetLawsuitByNumber(currentLawsuit.case_number);
                         if (lawsuitVM == null || lawsuitVM.ID == 0)
                             lawsuitVM = lawsuitService.CreateLawsuit(currentLawsuit);
                         //Activate lawsuit
@@ -66,7 +73,7 @@ namespace CourtsCheckSystem.Controllers
                 logger.LogError("User Lawsuits:", ex);
                 return BadRequest();
             }
-            return Ok();
+            return Ok("Successful request");
         }
 
         /// <summary>
@@ -80,16 +87,22 @@ namespace CourtsCheckSystem.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public IActionResult changedLawsuits()
         {
+
             //user authorization
             string accessToken = Request.Headers[HeaderNames.Authorization];
             if (String.IsNullOrEmpty(accessToken))
-                return Unauthorized("Missing header.");
+                return Unauthorized(new APIErrorVM() { error ="Missing header" });
+            if (!accessToken.Contains("Bearer "))
+                return BadRequest(new APIErrorVM() { error ="Wrong authorization type" });
+            accessToken = accessToken.Replace("Bearer ", "");
             if (!authService.CheckAuthorization(accessToken, "user"))
-                return Unauthorized();
+                return Unauthorized(new APIErrorVM() { error ="Unauthorized Access" });
 
             UserVM currentUser = userService.GetUserByAccessToken(accessToken);
+
             List<ChangedLawsuitData> result = lawsuitService.GetChangedLawsuitsListByUserID(Guid.Parse(currentUser.UUID));
             return Ok(result);
         }
+
     }
 }

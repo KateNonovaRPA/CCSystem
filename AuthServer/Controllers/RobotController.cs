@@ -42,8 +42,12 @@ namespace CourtsCheckSystem.Controllers
             string accessToken = Request.Headers[HeaderNames.Authorization];
             if (String.IsNullOrEmpty(accessToken))
                 return Unauthorized("Missing header.");
+            if (!accessToken.Contains("Bearer "))
+                return BadRequest();
+            accessToken = accessToken.Replace("Bearer ", "");
             if (!authService.CheckAuthorization(accessToken, "robot"))
                 return Unauthorized();
+
             if (robotData == null)
             {
                 return BadRequest("The data is not in the correct format.");
@@ -173,8 +177,12 @@ namespace CourtsCheckSystem.Controllers
         {
             //authorization
             string accessToken = Request.Headers[HeaderNames.Authorization];
+            //user authorization
             if (String.IsNullOrEmpty(accessToken))
-                return Unauthorized("Missing header");
+                return Unauthorized("Missing header.");
+            if (!accessToken.Contains("Bearer "))
+                return BadRequest();
+            accessToken = accessToken.Replace("Bearer ", "");
             if (!authService.CheckAuthorization(accessToken, "robot"))
                 return Unauthorized();
             try
