@@ -46,7 +46,7 @@ namespace Models.Services
                 _user.Email = _model.email;
                 _user.FullName = _model.fullName;
                 _user.Type = _model.type;
-                _user.createdAt = _model.createdAt;
+                _user.createdAt = _model.createdAt.Value;
 
                 db.Users.Add(_user);
                 db.SaveChanges();
@@ -103,8 +103,8 @@ namespace Models.Services
                 _user.email = user.Email;
                 _user.fullName = user.FullName;
                 _user.type = user.Type;
-                _user.createdAt = user.createdAt;
-                _user.updatedAt = user.updatedAt;
+                _user.createdAt = user.createdAt.Date;
+                _user.updatedAt = user.updatedAt.Date;
                 _user.deletedAt = user.deletedAt;
             };
 
@@ -122,9 +122,15 @@ namespace Models.Services
                 _user.email = user.Email;
                 _user.fullName = user.FullName;
                 _user.type = user.Type;
-                _user.createdAt = user.createdAt;
-                _user.updatedAt = user.updatedAt;
-                _user.deletedAt = user.deletedAt;
+                _user.createdAt = null;
+                _user.updatedAt = null;
+                _user.createdAtShort = user.createdAt.ToString("dd-MM-yyyy");
+                _user.updatedAtShort = (user.updatedAt != DateTime.MinValue) ? user.updatedAt.ToString("dd-MM-yyyy") : null;
+                if (user.deletedAt != null)
+                {
+                    _user.deletedAtShort = user.deletedAt.Value.ToString("dd-MM-yyyy");
+                }
+                _user.clientID = user.ClientID.ToString();
             };
 
             return _user;

@@ -83,6 +83,7 @@ namespace AuthServer
             services.AddMvc(options =>
             {
                 options.EnableEndpointRouting = false;
+                
             })
                 .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix);
 
@@ -90,6 +91,7 @@ namespace AuthServer
             {
                 options.ForwardedHeaders =
                     ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
             });
 
             // .AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
@@ -104,6 +106,7 @@ namespace AuthServer
                 options.DefaultRequestCulture = new RequestCulture("bg");
                 options.SupportedCultures = supportedCultures;
                 options.SupportedUICultures = supportedCultures;
+
             });
 
             //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -138,7 +141,9 @@ namespace AuthServer
                     .RequireAuthenticatedUser()
                     .Build();
             });
-
+            services.AddControllers().AddJsonOptions(options => {
+                options.JsonSerializerOptions.IgnoreNullValues = true;
+            });
             services.Configure<IISOptions>(options =>
             {
                 options.ForwardClientCertificate = false;

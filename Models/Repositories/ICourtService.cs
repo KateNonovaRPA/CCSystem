@@ -9,6 +9,7 @@ namespace Models.Contracts
     {
         bool CreateCourt(CourtVM _model);
         bool UpdateCourt(CourtVM _model);
+        CourtVM GetCourtByName(string courtName);
         int? CreateCourtAttribute(int courtId, string attributeName);
         //void AddCity(string city, string court, string both);
     }

@@ -41,12 +41,13 @@ namespace CourtsCheckSystem.Controllers
             //user validation
             string accessToken = Request.Headers[HeaderNames.Authorization];
             if (String.IsNullOrEmpty(accessToken))
-                return Unauthorized("Missing header.");
+                return Unauthorized(new APIErrorVM() { error ="Missing header" });
             if (!accessToken.Contains("Bearer "))
-                return BadRequest();
+                return BadRequest(new APIErrorVM() { error ="Wrong authorization type" });
             accessToken = accessToken.Replace("Bearer ", "");
-            if (!authService.CheckAuthorization(accessToken, "robot"))
-                return Unauthorized();
+            if (!authService.CheckAuthorization(accessToken, "user"))
+                return Unauthorized(new APIErrorVM() { error ="Unauthorized Access" });
+            return Unauthorized();
 
             if (robotData == null)
             {
@@ -176,15 +177,15 @@ namespace CourtsCheckSystem.Controllers
         public IActionResult lawsuitsForChecking()
         {
             //authorization
-            string accessToken = Request.Headers[HeaderNames.Authorization];
-            //user authorization
+            string accessToken = Request.Headers[HeaderNames.Authorization];           
             if (String.IsNullOrEmpty(accessToken))
-                return Unauthorized("Missing header.");
+                return Unauthorized(new APIErrorVM() { error ="Missing header" });
             if (!accessToken.Contains("Bearer "))
-                return BadRequest();
+                return BadRequest(new APIErrorVM() { error ="Wrong authorization type" });
             accessToken = accessToken.Replace("Bearer ", "");
-            if (!authService.CheckAuthorization(accessToken, "robot"))
-                return Unauthorized();
+            //user authorization
+            if (!authService.CheckAuthorization(accessToken, "user"))
+                return Unauthorized(new APIErrorVM() { error ="Unauthorized Access" });
             try
             {
                 UserVM currentUser = userService.GetUserByAccessToken(accessToken);

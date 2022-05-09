@@ -84,15 +84,16 @@ namespace Models.Services
             return lawsuits;
         }
 
-        public LawsuitVM GetLawsuitByNumber(string lawsuitNumber)
+        public LawsuitVM GetLawsuitByNumber(string lawsuitNumber, int courtID, string year, int typeID)
         {
             LawsuitVM _lawsuit = new LawsuitVM();
             try
             {
-                Lawsuit lawsuit = db.Lawsuits.Where(l => l.lawsuitNumber == lawsuitNumber).FirstOrDefault();
+                Lawsuit lawsuit = db.Lawsuits.Where(l => l.lawsuitNumber == lawsuitNumber && l.courtID == courtID && l.year == year && l.typeID ==typeID).FirstOrDefault();
                 if (lawsuit != null)
                 {
                     _lawsuit.lawsuitNumber = lawsuit.lawsuitNumber;
+                    _lawsuit.lawsuitEntryNumber = !String.IsNullOrEmpty(lawsuit.lawsuitEntryNumber) ? lawsuit.lawsuitEntryNumber : "";
                     _lawsuit.type = db.LawsuitTypes.Where(e => e.ID==lawsuit.typeID).FirstOrDefault().name;
                     _lawsuit.court = db.Courts.Where(c => c.ID == lawsuit.courtID).FirstOrDefault().name.ToString();
                     _lawsuit.createdAt =lawsuit.createdAt.ToString("dd-MM-yyyy");
@@ -122,15 +123,15 @@ namespace Models.Services
             return _lawsuit;
         }
 
-        public LawsuitVM GetLawsuitByEntryNumber(string lawsuitEntryNumber)
+        public LawsuitVM GetLawsuitByEntryNumber(string lawsuitEntryNumber, int courtID)
         {
             LawsuitVM _lawsuit = new LawsuitVM();
             try
             {
-                Lawsuit lawsuit = db.Lawsuits.Where(l => l.lawsuitEntryNumber == lawsuitEntryNumber).FirstOrDefault();
+                Lawsuit lawsuit = db.Lawsuits.Where(l => l.lawsuitEntryNumber == lawsuitEntryNumber && l.courtID == courtID).FirstOrDefault();
                 if (lawsuit != null)
                 {
-                    //_lawsuit.lawsuitNumber = lawsuit.lawsuitNumber;
+                    _lawsuit.lawsuitNumber = !String.IsNullOrEmpty(lawsuit.lawsuitNumber) ? lawsuit.lawsuitNumber : "";
                     _lawsuit.lawsuitEntryNumber = lawsuit.lawsuitEntryNumber;
                     _lawsuit.type = db.LawsuitTypes.Where(e => e.ID==lawsuit.typeID).FirstOrDefault().name;
                     _lawsuit.court = db.Courts.Where(c => c.ID == lawsuit.courtID).FirstOrDefault().name.ToString();
@@ -161,6 +162,44 @@ namespace Models.Services
             return _lawsuit;
         }
 
+        public LawsuitVM GetLawsuitByEntryNumberAndLawsuitNumber(string entryNumber, string lawsuitNumber, int courtID)
+        {
+            LawsuitVM _lawsuit = new LawsuitVM();
+            try
+            {
+                Lawsuit lawsuit = db.Lawsuits.Where(l => l.lawsuitEntryNumber == entryNumber && l.lawsuitNumber == lawsuitNumber && l.courtID == courtID).FirstOrDefault();
+                if (lawsuit != null)
+                {
+                    _lawsuit.lawsuitNumber = !String.IsNullOrEmpty(lawsuit.lawsuitNumber) ? lawsuit.lawsuitNumber : "";
+                    _lawsuit.lawsuitEntryNumber = lawsuit.lawsuitEntryNumber;
+                    _lawsuit.type = db.LawsuitTypes.Where(e => e.ID==lawsuit.typeID).FirstOrDefault().name;
+                    _lawsuit.court = db.Courts.Where(c => c.ID == lawsuit.courtID).FirstOrDefault().name.ToString();
+                    _lawsuit.createdAt =lawsuit.createdAt.ToString("dd-MM-yyyy");
+                    _lawsuit.ID =lawsuit.ID;
+
+                    List<LawsuitDataVM> lawsuitDataVMs = new List<LawsuitDataVM>();
+                    LawsuitData lastLawsuitData = db.LawsuitData.Where(u => u.lawsuitID == lawsuit.ID).OrderByDescending(u => u.createdAt).FirstOrDefault();
+                    int lastChangeNumber = (lastLawsuitData != null) ? lastLawsuitData.changeNumber : 0;
+                    if (lastLawsuitData != null)
+                    {
+                        List<LawsuitData> lawsuitDataList = db.LawsuitData.Include(a => a.CourtAttribute).Where(u => u.lawsuitID == lawsuit.ID && u.changeNumber == lastChangeNumber).ToList();
+                        foreach (LawsuitData lawsuitData in lawsuitDataList)
+                        {
+                            LawsuitDataVM lawsuitDataVM = new LawsuitDataVM();
+                            lawsuitDataVM.attributeName = lawsuitData.CourtAttribute.attributeName;
+                            lawsuitDataVM.data = lawsuitData.data;
+                            lawsuitDataVM.createdAt = lawsuitData.createdAt.ToString("dd-MM-yyyy");
+                            lawsuitDataVMs.Add(lawsuitDataVM);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("GetLawsuitByEntryNumber func " + ex.Message);
+            }
+            return _lawsuit;
+        }
         public List<LawsuitVM> GetLawsuitsByUser(Guid userID)
         {
             List<LawsuitVM> lawsuits = new List<LawsuitVM>();
@@ -375,6 +414,16 @@ namespace Models.Services
             }
         }
 
+        public void UpdateLawsuit(LawsuitVM lawsuitVM)
+        {
+            Lawsuit currentLawsuit = db.Lawsuits.Where(e => e.ID == lawsuitVM.ID).FirstOrDefault();
+            if (String.IsNullOrEmpty(currentLawsuit.lawsuitEntryNumber) && !String.IsNullOrEmpty(lawsuitVM.lawsuitEntryNumber))
+                currentLawsuit.lawsuitEntryNumber = lawsuitVM.lawsuitEntryNumber;
+            if (String.IsNullOrEmpty(currentLawsuit.lawsuitNumber) && !String.IsNullOrEmpty(lawsuitVM.lawsuitNumber))
+                currentLawsuit.lawsuitNumber = lawsuitVM.lawsuitNumber;
+            db.Update(currentLawsuit);
+            db.SaveChanges();
+        }
         public bool CreateLawsuitData(int courtId, int lawsuitID, List<KeyValuePair<string, string>> lawsuitData, int lastChangedNumber)
         {
             try
@@ -434,8 +483,8 @@ namespace Models.Services
             List<ChangedLawsuitData> allChangedData = new List<ChangedLawsuitData>();
             try
             {
-                List<int> test = db.UserLawsuits.Where(u => u.active == true).Select(u => u.lawsuitID).ToList();
-                List<Lawsuit> userLawsuits = db.Lawsuits.Include(t => t.Court).Include(t => t.Type).Where(t => test.Contains(t.ID)  && t.updatedAt.Date == DateTime.Today.Date).ToList();
+                List<int> userLawsuitIDs = db.UserLawsuits.Where(u => u.active == true && u.userID == userID).Select(u => u.lawsuitID).ToList();
+                List<Lawsuit> userLawsuits = db.Lawsuits.Include(t => t.Court).Include(t => t.Type).Where(t => userLawsuitIDs.Contains(t.ID)  && t.updatedAt.Date == DateTime.Today.Date).ToList();
 
                 foreach (Lawsuit userLawsuit in userLawsuits)
                 {
@@ -463,6 +512,84 @@ namespace Models.Services
             return allChangedData;
         }
 
+        public List<ChangedLawsuitData> GetChangedLawsuitsListByUserID(Guid userID, DateTime from)
+        {
+            //string jsonresp = "";
+            List<ChangedLawsuitData> allChangedData = new List<ChangedLawsuitData>();
+            try
+            {
+                List<int> userLawsuitIDs = db.UserLawsuits.Where(u => u.active == true && u.userID == userID).Select(u => u.lawsuitID).ToList();
+                List<Lawsuit> userLawsuits = db.Lawsuits.Include(t => t.Court).Include(t => t.Type).Where(t => userLawsuitIDs.Contains(t.ID)  && t.updatedAt.Date >= from.Date).ToList();
+
+                foreach (Lawsuit userLawsuit in userLawsuits)
+                {
+                    ChangedLawsuitData lawsuitData = new ChangedLawsuitData()
+                    {
+                        lawsuitNumber = userLawsuit.lawsuitNumber,
+                        lawsuitEntryNumber = userLawsuit.lawsuitEntryNumber,
+                        court = userLawsuit.Court.name,
+                        city = (String.IsNullOrEmpty(userLawsuit.Court.cityId.ToString())) ? null : db.Cities.Where(c => c.ID == userLawsuit.Court.cityId).FirstOrDefault().name,
+                        type = (userLawsuit.Type != null) ? userLawsuit.Type.name : null,
+                    };
+                    int lawsuitTypeID = userLawsuit.Type.lawsuitTypeDictionaryID.GetValueOrDefault();
+                    //WARN: match types
+                    if (lawsuitTypeID != 0)
+                    {
+                        string type = db.LawsuitTypeDictionary.Where(d => d.ID == lawsuitTypeID).FirstOrDefault().name;
+                    }
+                    allChangedData.Add(lawsuitData);
+                }
+                //jsonresp = JsonConvert.SerializeObject(allChangedData);
+            }
+            catch (Exception ex)
+            {
+                log.Error("GetChangedLawsuitsListByUserID func " + ex.Message);
+                return null;
+            }
+            return allChangedData;
+        }
+
+        public List<LawsuitInfoVM> GetAllUserLawsuits(Guid userID)
+        {
+            List<LawsuitInfoVM> allChangedData = new List<LawsuitInfoVM>();
+            try
+            {
+                List<int> userLawsuitIDs = db.UserLawsuits.Where(u => u.userID == userID).Select(u => u.lawsuitID).ToList();
+                List<Lawsuit> userLawsuits = db.Lawsuits.Include(t => t.Court).Include(t => t.Type).Where(t => userLawsuitIDs.Contains(t.ID)).ToList();
+
+                foreach (Lawsuit userLawsuit in userLawsuits)
+                {
+                    LawsuitInfoVM lawsuitData = new LawsuitInfoVM();
+
+                    lawsuitData.lawsuitNumber = userLawsuit.lawsuitNumber;
+                    lawsuitData.lawsuitEntryNumber = userLawsuit.lawsuitEntryNumber;
+                    lawsuitData.type = (userLawsuit.Type != null) ? userLawsuit.Type.name : "";
+                    lawsuitData.court = userLawsuit.Court.name;
+                    lawsuitData.city = (String.IsNullOrEmpty(userLawsuit.Court.cityId.ToString())) ? null : db.Cities.Where(c => c.ID == userLawsuit.Court.cityId).FirstOrDefault().name;
+                    if (userLawsuit.updatedAt != DateTime.MinValue)
+                    {
+                        lawsuitData.updatedAt =  userLawsuit.updatedAt.ToString("dd-MM-yyyy");
+                    }
+                    //lawsuitData.updatedAt = (userLawsuit.updatedAt != DateTime.MinValue) ? userLawsuit.updatedAt.ToString("dd-MM-yyyy") : null;
+                    lawsuitData.active = db.UserLawsuits.Where(u => u.userID == userID && u.lawsuitID == userLawsuit.ID).FirstOrDefault().active;
+                    //WARN: match types
+                    //TODO: check the types
+                    if (userLawsuit.Type.lawsuitTypeDictionaryID != null)
+                    {
+                        int lawsuitTypeID = userLawsuit.Type.lawsuitTypeDictionaryID.GetValueOrDefault();
+                        string type = db.LawsuitTypeDictionary.Where(d => d.ID == lawsuitTypeID).FirstOrDefault().name;
+                    }
+                    allChangedData.Add(lawsuitData);
+                }
+                //jsonresp = JsonConvert.SerializeObject(allChangedData);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Get all user lawsuits request " + ex.Message);
+                return null;
+            }
+            return allChangedData;
+        }
         private LawsuitVM ParseToLawsuitVM(Lawsuit lawsuit)
         {
             LawsuitVM lawsuitVM = new LawsuitVM();
@@ -560,6 +687,16 @@ namespace Models.Services
             {
                 log.Error("AddLawsuitType func " + ex.Message);
             }
+        }
+
+        public int GetLawsuitTypeID(string type)
+        {
+
+            LawsuitType currentType = db.LawsuitTypes.Where(t => t.name== type).FirstOrDefault();
+            if (currentType != null)
+                return currentType.ID;
+            else
+                return 0;
         }
     }
 }

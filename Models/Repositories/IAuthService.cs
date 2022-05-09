@@ -11,6 +11,7 @@ namespace Models.Contracts
 
         bool DeAuthorizeUser(string clientID);
         bool ValidateAPIKey(string integratorKey);
+        bool UpdateUserInfo(string clientID, UserInfoVM user);
 
         resAuthRequestVM AuthCode(AuthRequestVM auth);
         resTokenVM GetAccessToken(string authorizationCode);

@@ -4,6 +4,16 @@ using System.Text;
 
 namespace Models.ViewModels
 {
+    public class LawsuitInfoVM
+    {
+        public string lawsuitNumber { get; set; }
+        public string lawsuitEntryNumber { get; set; }
+        public string type { get; set; }
+        public string court { get; set; }
+        public string updatedAt { get; set; }
+        public string city { get; set; }
+        public bool active { get; set; }
+    }
     public class LawsuitVM
     {
         public int ID { get; set; }
@@ -17,6 +27,8 @@ namespace Models.ViewModels
         public string updatedAt { get; set; }
         public int lastChangeNumber { get; set; }
         public List<LawsuitDataVM> lawsuitData { get; set; }
+        public string city { get; set; }
+        public bool active { get; set; }
 
     }
     public class LawsuitDataVM

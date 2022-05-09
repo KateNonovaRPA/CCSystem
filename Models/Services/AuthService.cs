@@ -87,17 +87,18 @@ namespace Models.Services
 
                             currentUser = db.Users.AsNoTracking().FirstOrDefault(x => x.ClientID == Guid.Parse(auth.ClientID));
                             string newClientSecret = "";
-
-                            if (currentUser == null || String.IsNullOrEmpty(currentUser.ClientSecret))
-                            {
-                                newClientSecret = Guid.NewGuid().ToString();
-                            };
+                            newClientSecret = Guid.NewGuid().ToString();
+                            //if (currentUser == null || String.IsNullOrEmpty(currentUser.ClientSecret))
+                            //{
+                            //    newClientSecret = Guid.NewGuid().ToString();
+                            //};
                             if (currentUser != null) //update user
                             {
-                                if (!String.IsNullOrEmpty(currentUser.AccessToken))
-                                {
-                                    currentUser.AccessToken = "";
-                                }
+                                //if (!String.IsNullOrEmpty(currentUser.AccessToken))
+                                //{
+                                //    
+                                //}
+                                currentUser.AccessToken = "";
                                 currentUser.FullName = auth.user.fullName;
                                 currentUser.Email = auth.user.email;
                                 currentUser.updatedAt = DateTime.Now;
@@ -105,6 +106,8 @@ namespace Models.Services
                                 db.Users.Update(currentUser);
                                 db.SaveChanges();
                                 authRes.ClientSecret = newClientSecret;
+
+                                string test = Base64Encode(auth.ClientID+ ":" + newClientSecret);
                             }
                             else //create new user
                             {
@@ -118,6 +121,7 @@ namespace Models.Services
                                 db.Users.Add(_user);
                                 db.SaveChanges();
                                 authRes.ClientSecret = newClientSecret;
+                                string test = Base64Encode(auth.ClientID+ ":" + newClientSecret);
                             }
                             return authRes;
                         }
@@ -130,6 +134,82 @@ namespace Models.Services
                 }
             }
             return authRes;
+        }
+        public UserInfoVM GetUserInfo(string clientID)
+        {
+            UserInfoVM userInfo = new UserInfoVM();
+            if (clientID == null)
+            {
+                return null;
+            }
+            else
+            {
+                User dbUser = new User();
+                try
+                {
+                    Guid cliendIDGuid = new Guid();
+                    if (Guid.TryParse(clientID, out cliendIDGuid))
+                    {
+                        using (var db = new MainContext(_dbContextOptions))
+                        {
+                            dbUser = db.Users.Where(u => u.ClientID == Guid.Parse(clientID)).FirstOrDefault();
+                            if (dbUser.ClientID != null)
+                            {
+                                userInfo.email = dbUser.Email;
+                                userInfo.fullName = dbUser.FullName;
+                                userInfo.createdAt = dbUser.createdAt;
+                                userInfo.updatedAt = dbUser.updatedAt;
+                                //TODO: add active in db
+                                userInfo.active = true;
+                            }
+                        }
+
+                    }
+
+                }
+                catch
+                {
+                    return null;
+                }
+                return userInfo;
+            }
+        }
+
+        public bool UpdateUserInfo(string clientID, UserInfoVM user)
+        {
+            bool isUpdated = false;
+            if (!String.IsNullOrEmpty(clientID) && user!=null)
+            {
+                User dbUser = new User();
+                try
+                {
+                    Guid cliendIDGuid = new Guid();
+                    if (Guid.TryParse(clientID, out cliendIDGuid))
+                    {
+                        using (var db = new MainContext(_dbContextOptions))
+                        {
+                            dbUser = db.Users.Where(u => u.ClientID == Guid.Parse(clientID)).FirstOrDefault();
+                            if (dbUser.ClientID != null)
+                            {
+                                if(!String.IsNullOrEmpty(user.email))
+                                    dbUser.Email = user.email;
+                                if (!String.IsNullOrEmpty(user.fullName))
+                                    dbUser.FullName = user.fullName;
+                                dbUser.updatedAt = DateTime.Now;
+                                //TODO: add active
+                                db.Users.Update(dbUser);
+                                db.SaveChanges();
+                                isUpdated = true;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    return isUpdated;
+                }
+            }
+            return isUpdated;
         }
         public resTokenVM GetAccessToken(string authorizationCode)
         {
@@ -200,6 +280,11 @@ namespace Models.Services
                 }
             }
             return isValid;
+        }
+        private string Base64Encode(string text)
+        {
+            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(text);
+            return System.Convert.ToBase64String(plainTextBytes);
         }
         private string Base64Decode(string base64EncodedData)
         {

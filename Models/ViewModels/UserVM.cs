@@ -3,6 +3,18 @@ using System.Text.Json.Serialization;
 
 namespace Models.ViewModels
 {
+
+    public class UserInfoVM
+    {
+        public string fullName { get; set; }
+        public string type { get; set; }
+        public string email { get; set; }
+        public bool active { get; set; }
+
+        public DateTime createdAt { get; set; }
+        public DateTime updatedAt { get; set; }
+        public DateTime? deletedAt { get; set; }
+    }
     public class UserVM
     {
         public string UUID { get; set; }
@@ -10,10 +22,13 @@ namespace Models.ViewModels
         public string fullName { get; set; }
         public string type { get; set; }
         public string email { get; set; }
-        public DateTime createdAt { get; set; }
-        public DateTime updatedAt { get; set; }
+        public DateTime? createdAt { get; set; }
+        public DateTime? updatedAt { get; set; }
         public DateTime? deletedAt { get; set; }
         public string AccessToken { get; set; }
+        public string createdAtShort { get; set; }
+        public string updatedAtShort { get; set; }
+        public string deletedAtShort { get; set; }
     }
     public class JsonWebToken
     {

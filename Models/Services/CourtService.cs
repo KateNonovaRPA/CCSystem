@@ -1,5 +1,6 @@
-﻿using Models.Entities;
+﻿using Models.Context;
 using Models.Contracts;
+using Models.Entities;
 using Models.ViewModels;
 using System;
 using System.Linq;
@@ -9,6 +10,11 @@ namespace Models.Services
     public class CourtService : BaseService, ICourtService
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        public CourtService(MainContext context)
+        {
+            db = context;
+        }
 
         /// <summary>
         /// Add new court
@@ -36,6 +42,19 @@ namespace Models.Services
                 log.Error(ex.Message);
                 return false;
             }
+        }
+
+        public CourtVM GetCourtByName(string courtName)
+        {
+            CourtVM currentCourtVM = new CourtVM();
+            Court court = db.Courts.Where(e => e.name == courtName).FirstOrDefault();
+            if (court != null)
+            {
+                currentCourtVM.ID = court.ID;
+                currentCourtVM.name = court.name;
+                currentCourtVM.cityID = (court.City != null) ? court.City.ID : 0;
+            }
+            return currentCourtVM;
         }
 
         /// <summary>
@@ -89,6 +108,5 @@ namespace Models.Services
                 return null;
             }
         }
-      
     }
 }

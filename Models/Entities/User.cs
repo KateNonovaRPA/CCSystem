@@ -19,7 +19,7 @@ namespace Models.Entities
         public string FullName { get; set; }
         public string Type { get; set; }
         public string Email { get; set; }
-
+       // public bool Active { get; set; }
         [DataType(DataType.DateTime)]
         public DateTime createdAt { get; set; }
 
